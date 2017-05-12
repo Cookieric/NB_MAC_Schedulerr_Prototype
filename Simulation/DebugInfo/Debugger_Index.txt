@@ -1,0 +1,6 @@
+cd /d "C:\XXX\XXX"
+"D:\gcc\MinGW\4.8.1-x64\bin\gdb.exe" "RACH capacity.exe"
+
+r:run
+n:next
+where: see where is wrong
