@@ -3,4 +3,5 @@ cd /d "C:\XXX\XXX"
 
 r:run
 n:next
+break x: set interrupt on line x of file.
 where: see where is wrong

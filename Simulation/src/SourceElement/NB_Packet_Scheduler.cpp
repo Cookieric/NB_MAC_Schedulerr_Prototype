@@ -6,10 +6,13 @@
 #include <math.h>
 #include <iostream>
 #include <list>
-#include "testArrivalModel.cpp"
+#include <fstream>
+// #include "testArrivalModel.cpp"
 using namespace std;
 
 #define LOG(...) printf(__VA_ARGS__)
+#define _HAS_ITERATOR_DEBUGGING 0
+
 
 
 
@@ -346,6 +349,7 @@ int main(int argc, char const *argv[])
 	for (int z = 0; z < 3; ++z)
 	{
 		LOG("# of UE:%lf\n",numUE[z]);
+		// system("pause");
 		double utilization=0;
 		double singleToneRatio = 0;
 		for (int i = 0; i < simTimes; ++i)
@@ -390,16 +394,21 @@ int main(int argc, char const *argv[])
 				if(i->multi_tone>2)	i->multi_tone=1;//Fixed to 1 or 2, not exceed 2 or bug exist in getFreq Fun.
 				if(i->multi_tone==0)	cntTone++;
 				transfer_MCS(*i);//Transfer from PHR to MCS
-				if(i->mcs>1)	i->Qm=2;
-				else i->Qm=1;
+				//modulation order=2 if multitoneSupport
+				if(i->multi_tone!=0)	i->Qm=2;
+				else
+				{
+					if(i->mcs>1)	i->Qm=2;
+					else i->Qm=1;
+				}
 				// i->mcs=2+rand()%9;//Qm=2,MCS:2-10 36213 Table 16.5.1.2-1
 				// int I_RAR=NPRACH_Struc.rep[i]=* (rand()%successPreambleCE0);
 				resourceAllocate(*i);
 				cout<<"UE_id: " <<i->UE_id<<"; CE_Level: "<<i->CE_Level<<"; multi_tone: "<<i->multi_tone<<"; Buffer size: "<<i->UL_Buffer_Sizes<<"; DV: "<<i->DV<<"; PHR: "<<i->PHR<<"; MCS: "<<i->mcs<<"; Qm: "<<i->Qm<<"; TBS: "<<i->allocate_Buffer_Sizes<<"; num_RU: "<<i->UE_num_RU<<"; Remaining_Buffer_Sizes: "<<i->remaining_Buffer_Sizes<<"; Round: "<<i->round<<endl;
 			}
 
-			cout<<"New Arrival Allocate Parts Of DCI setting done..."<<endl;
-			system("pause");
+			// cout<<"New Arrival Allocate Parts Of DCI setting done..."<<endl;
+			// system("pause");
 			int num_UL_Subcarrier=48;
 			while(!UL_Sche_UE_List.empty())
 			{
@@ -437,15 +446,15 @@ int main(int argc, char const *argv[])
 						}
 						if(i->remaining_Buffer_Sizes>0&&i->remainging_subframe==0&&flag!=-1)
 						{
-							cout<<"DCI for this round done, let BSR as new arrival for BSR_UE struc after Bdelay..."<<endl;
-							cout<<"UE_id: "<<i->UE_id<<"; remaining_Buffer_Sizes: "<<i->remaining_Buffer_Sizes<<endl;
-							system("pause");
+							// cout<<"DCI for this round done, let BSR as new arrival for BSR_UE struc after Bdelay..."<<endl;
+							// cout<<"UE_id: "<<i->UE_id<<"; remaining_Buffer_Sizes: "<<i->remaining_Buffer_Sizes<<endl;
+							// system("pause");
 							it1 = UL_Sche_UE_List.erase (it1);
 							--it1;
 							if(UL_Sche_UE_List.empty())
 							{
 								finalPacketPos=j;
-								cout<<"finalPacketPos= "<<j<<endl;
+								// cout<<"finalPacketPos= "<<j<<endl;
 							}
 						}
 						// it1 = mylist.erase (it1);
@@ -457,9 +466,10 @@ int main(int argc, char const *argv[])
 				// 	// if(i->remaining_Buffer_Sizes>0) i->round++;
 				// 	if(i->remainging_subframe==0)	it1 = UL_Sche_UE_List.erase (it1);
 				// }
-				cout<<"subframe-base scheduing for RA period done..."<<endl;
-				cout<<endl;
-				system("pause");
+				// cout<<"subframe-base scheduing for RA period done..."<<endl;
+				// cout<<endl;
+				// system("pause");
+				/*Print out NPUSCH/NPRACH Bitmap*/
 				for (int i = 0; i < period_NPRACH; ++i)
 				{
 					for (int j = 0; j < 48; ++j)
@@ -494,13 +504,13 @@ int main(int argc, char const *argv[])
 					// cout<<"sumOccupiedResource: "<<sumOccupiedResource<<"/sumAvailResource: "<<sumAvailResource<<endl;
 				}
 				occupiedResource=0;
-				cout<<"Remaining UE List:"<<endl;
+				// cout<<"Remaining UE List:"<<endl;
 				for (it1=UL_Sche_UE_List.begin(); it1!=UL_Sche_UE_List.end(); ++it1)
 				{
 					UE_info *i = &*it1;//need to convert from iterator to (UE_info *)
 					// i->round++;
 					// lock=false;//May need to fixed, lock timing set flase for New Arrival and > 1 round UEs....
-					cout<<"UE_id: " <<i->UE_id<<"; multi_tone"<<i->multi_tone<<"; Buffer size: "<<i->UL_Buffer_Sizes<<"; TBS: "<<i->allocate_Buffer_Sizes<<"; Remaining_Buffer_Sizes: "<<i->remaining_Buffer_Sizes<<"; num_RU: "<<i->UE_num_RU<<"; num_ULslots: "<<get_num_Slot(i->num_tone)<<" ;Repetition: "<<pow(2,i->CE_Level)<<"; Remaining_Subframe: "<<i->remainging_subframe<<"; Round: "<<i->round<<endl;
+					// cout<<"UE_id: " <<i->UE_id<<"; multi_tone"<<i->multi_tone<<"; Buffer size: "<<i->UL_Buffer_Sizes<<"; TBS: "<<i->allocate_Buffer_Sizes<<"; Remaining_Buffer_Sizes: "<<i->remaining_Buffer_Sizes<<"; num_RU: "<<i->UE_num_RU<<"; num_ULslots: "<<get_num_Slot(i->num_tone)<<" ;Repetition: "<<pow(2,i->CE_Level)<<"; Remaining_Subframe: "<<i->remainging_subframe<<"; Round: "<<i->round<<endl;
 				}
 			}
 			// cout<<"sumOccupiedResource: "<<sumOccupiedResource<<"/sumAvailResource: "<<sumAvailResource<<endl;
@@ -510,7 +520,7 @@ int main(int argc, char const *argv[])
 			// cout<<"utilization: "<<utilization<<endl;
 		}
 		cout<<"Average single-tone UEs/TotoalUEs= "<<singleToneRatio/simTimes<<endl;
-		cout<<"Number of UE: "<<numUE[z]<<endl;
+		// cout<<"Number of UE: "<<numUE[z]<<endl;
 		cout<<"Average utilization: "<<utilization/simTimes<<endl;
 		cout<<"-------------------------------------------"<<endl;
 		if(delta==3)	oneThird_singleTone << numUE << "," << utilization/simTimes << endl;
@@ -716,6 +726,8 @@ int get_num_subcarrier_perRU(int get_startFreqPos)
 	if(get_startFreqPos==resourceAllocPattern1[4])	return 6;
 	else if(get_startFreqPos==resourceAllocPattern1[3])	return 3;
 	else if(get_startFreqPos==resourceAllocPattern1[0]||get_startFreqPos==resourceAllocPattern1[1]||get_startFreqPos==resourceAllocPattern1[2])	return 1;
+
+	return -1;
 }
 
 int get_startFreqPos(int ** UL_Channle_Struc,int subframe,int multiToneSupport)
