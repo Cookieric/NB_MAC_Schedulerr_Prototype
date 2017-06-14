@@ -122,86 +122,86 @@ Simulation/fast:
 	$(MAKE) -f CMakeFiles\Simulation.dir\build.make CMakeFiles/Simulation.dir/build
 .PHONY : Simulation/fast
 
-eNB_scheduler_NB.obj: eNB_scheduler_NB.c.obj
+eNB_schedule_function_NB.obj: eNB_schedule_function_NB.cpp.obj
+
+.PHONY : eNB_schedule_function_NB.obj
+
+# target to build an object file
+eNB_schedule_function_NB.cpp.obj:
+	$(MAKE) -f CMakeFiles\Simulation.dir\build.make CMakeFiles/Simulation.dir/eNB_schedule_function_NB.cpp.obj
+.PHONY : eNB_schedule_function_NB.cpp.obj
+
+eNB_schedule_function_NB.i: eNB_schedule_function_NB.cpp.i
+
+.PHONY : eNB_schedule_function_NB.i
+
+# target to preprocess a source file
+eNB_schedule_function_NB.cpp.i:
+	$(MAKE) -f CMakeFiles\Simulation.dir\build.make CMakeFiles/Simulation.dir/eNB_schedule_function_NB.cpp.i
+.PHONY : eNB_schedule_function_NB.cpp.i
+
+eNB_schedule_function_NB.s: eNB_schedule_function_NB.cpp.s
+
+.PHONY : eNB_schedule_function_NB.s
+
+# target to generate assembly for a file
+eNB_schedule_function_NB.cpp.s:
+	$(MAKE) -f CMakeFiles\Simulation.dir\build.make CMakeFiles/Simulation.dir/eNB_schedule_function_NB.cpp.s
+.PHONY : eNB_schedule_function_NB.cpp.s
+
+eNB_schedule_helper_NB.obj: eNB_schedule_helper_NB.cpp.obj
+
+.PHONY : eNB_schedule_helper_NB.obj
+
+# target to build an object file
+eNB_schedule_helper_NB.cpp.obj:
+	$(MAKE) -f CMakeFiles\Simulation.dir\build.make CMakeFiles/Simulation.dir/eNB_schedule_helper_NB.cpp.obj
+.PHONY : eNB_schedule_helper_NB.cpp.obj
+
+eNB_schedule_helper_NB.i: eNB_schedule_helper_NB.cpp.i
+
+.PHONY : eNB_schedule_helper_NB.i
+
+# target to preprocess a source file
+eNB_schedule_helper_NB.cpp.i:
+	$(MAKE) -f CMakeFiles\Simulation.dir\build.make CMakeFiles/Simulation.dir/eNB_schedule_helper_NB.cpp.i
+.PHONY : eNB_schedule_helper_NB.cpp.i
+
+eNB_schedule_helper_NB.s: eNB_schedule_helper_NB.cpp.s
+
+.PHONY : eNB_schedule_helper_NB.s
+
+# target to generate assembly for a file
+eNB_schedule_helper_NB.cpp.s:
+	$(MAKE) -f CMakeFiles\Simulation.dir\build.make CMakeFiles/Simulation.dir/eNB_schedule_helper_NB.cpp.s
+.PHONY : eNB_schedule_helper_NB.cpp.s
+
+eNB_scheduler_NB.obj: eNB_scheduler_NB.cpp.obj
 
 .PHONY : eNB_scheduler_NB.obj
 
 # target to build an object file
-eNB_scheduler_NB.c.obj:
-	$(MAKE) -f CMakeFiles\Simulation.dir\build.make CMakeFiles/Simulation.dir/eNB_scheduler_NB.c.obj
-.PHONY : eNB_scheduler_NB.c.obj
+eNB_scheduler_NB.cpp.obj:
+	$(MAKE) -f CMakeFiles\Simulation.dir\build.make CMakeFiles/Simulation.dir/eNB_scheduler_NB.cpp.obj
+.PHONY : eNB_scheduler_NB.cpp.obj
 
-eNB_scheduler_NB.i: eNB_scheduler_NB.c.i
+eNB_scheduler_NB.i: eNB_scheduler_NB.cpp.i
 
 .PHONY : eNB_scheduler_NB.i
 
 # target to preprocess a source file
-eNB_scheduler_NB.c.i:
-	$(MAKE) -f CMakeFiles\Simulation.dir\build.make CMakeFiles/Simulation.dir/eNB_scheduler_NB.c.i
-.PHONY : eNB_scheduler_NB.c.i
+eNB_scheduler_NB.cpp.i:
+	$(MAKE) -f CMakeFiles\Simulation.dir\build.make CMakeFiles/Simulation.dir/eNB_scheduler_NB.cpp.i
+.PHONY : eNB_scheduler_NB.cpp.i
 
-eNB_scheduler_NB.s: eNB_scheduler_NB.c.s
+eNB_scheduler_NB.s: eNB_scheduler_NB.cpp.s
 
 .PHONY : eNB_scheduler_NB.s
 
 # target to generate assembly for a file
-eNB_scheduler_NB.c.s:
-	$(MAKE) -f CMakeFiles\Simulation.dir\build.make CMakeFiles/Simulation.dir/eNB_scheduler_NB.c.s
-.PHONY : eNB_scheduler_NB.c.s
-
-eNB_shcedule_function_NB.obj: eNB_shcedule_function_NB.c.obj
-
-.PHONY : eNB_shcedule_function_NB.obj
-
-# target to build an object file
-eNB_shcedule_function_NB.c.obj:
-	$(MAKE) -f CMakeFiles\Simulation.dir\build.make CMakeFiles/Simulation.dir/eNB_shcedule_function_NB.c.obj
-.PHONY : eNB_shcedule_function_NB.c.obj
-
-eNB_shcedule_function_NB.i: eNB_shcedule_function_NB.c.i
-
-.PHONY : eNB_shcedule_function_NB.i
-
-# target to preprocess a source file
-eNB_shcedule_function_NB.c.i:
-	$(MAKE) -f CMakeFiles\Simulation.dir\build.make CMakeFiles/Simulation.dir/eNB_shcedule_function_NB.c.i
-.PHONY : eNB_shcedule_function_NB.c.i
-
-eNB_shcedule_function_NB.s: eNB_shcedule_function_NB.c.s
-
-.PHONY : eNB_shcedule_function_NB.s
-
-# target to generate assembly for a file
-eNB_shcedule_function_NB.c.s:
-	$(MAKE) -f CMakeFiles\Simulation.dir\build.make CMakeFiles/Simulation.dir/eNB_shcedule_function_NB.c.s
-.PHONY : eNB_shcedule_function_NB.c.s
-
-eNB_shcedule_helper_NB.obj: eNB_shcedule_helper_NB.c.obj
-
-.PHONY : eNB_shcedule_helper_NB.obj
-
-# target to build an object file
-eNB_shcedule_helper_NB.c.obj:
-	$(MAKE) -f CMakeFiles\Simulation.dir\build.make CMakeFiles/Simulation.dir/eNB_shcedule_helper_NB.c.obj
-.PHONY : eNB_shcedule_helper_NB.c.obj
-
-eNB_shcedule_helper_NB.i: eNB_shcedule_helper_NB.c.i
-
-.PHONY : eNB_shcedule_helper_NB.i
-
-# target to preprocess a source file
-eNB_shcedule_helper_NB.c.i:
-	$(MAKE) -f CMakeFiles\Simulation.dir\build.make CMakeFiles/Simulation.dir/eNB_shcedule_helper_NB.c.i
-.PHONY : eNB_shcedule_helper_NB.c.i
-
-eNB_shcedule_helper_NB.s: eNB_shcedule_helper_NB.c.s
-
-.PHONY : eNB_shcedule_helper_NB.s
-
-# target to generate assembly for a file
-eNB_shcedule_helper_NB.c.s:
-	$(MAKE) -f CMakeFiles\Simulation.dir\build.make CMakeFiles/Simulation.dir/eNB_shcedule_helper_NB.c.s
-.PHONY : eNB_shcedule_helper_NB.c.s
+eNB_scheduler_NB.cpp.s:
+	$(MAKE) -f CMakeFiles\Simulation.dir\build.make CMakeFiles/Simulation.dir/eNB_scheduler_NB.cpp.s
+.PHONY : eNB_scheduler_NB.cpp.s
 
 rrc_NB.obj: rrc_NB.c.obj
 
@@ -239,15 +239,15 @@ help:
 	@echo ... Simulation
 	@echo ... edit_cache
 	@echo ... rebuild_cache
+	@echo ... eNB_schedule_function_NB.obj
+	@echo ... eNB_schedule_function_NB.i
+	@echo ... eNB_schedule_function_NB.s
+	@echo ... eNB_schedule_helper_NB.obj
+	@echo ... eNB_schedule_helper_NB.i
+	@echo ... eNB_schedule_helper_NB.s
 	@echo ... eNB_scheduler_NB.obj
 	@echo ... eNB_scheduler_NB.i
 	@echo ... eNB_scheduler_NB.s
-	@echo ... eNB_shcedule_function_NB.obj
-	@echo ... eNB_shcedule_function_NB.i
-	@echo ... eNB_shcedule_function_NB.s
-	@echo ... eNB_shcedule_helper_NB.obj
-	@echo ... eNB_shcedule_helper_NB.i
-	@echo ... eNB_shcedule_helper_NB.s
 	@echo ... rrc_NB.obj
 	@echo ... rrc_NB.i
 	@echo ... rrc_NB.s

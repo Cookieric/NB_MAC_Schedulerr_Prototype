@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// int UEs_arrival()
+// int PHR_generate()
 // {
-
+	// initiate_ra_proc
 // }

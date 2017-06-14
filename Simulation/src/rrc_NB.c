@@ -30,6 +30,7 @@ int NB_eNB_Init_RRC(MIB_NB * MIB_NB_S, SIB1_NB * SIB1_NB_S, SIB2_NB * SIB2_NB_S,
 	if(checkFrequencyDomain(SIB2_NB_S)==0)	LOG("\tNPRACH Config CE(0,1,2) Pass FrequencyDomain limitation\n");
 	//Initial for UE-Specific RRC Configuration
 	Initial_UE_Specific_Config(Msg4_S);
+	//All pp are the same for three CE levels
 	NPDCCH_period=SIB2_NB_S->npdcch_NumRepetitions_RA[0] * SIB2_NB_S->npdcch_StartSF_CSS_RA[0];
 	return 1;
 }
@@ -156,8 +157,12 @@ int Filter_SIB2_NB_Config(SIB2_NB * SIB2_NB_S)
 			for (n = 0; n < L_rmax; ++n)
 				if(candidate[m]<=rmax[n])
 					{
-						if(setdone==3)	return 1;
-						if(limitCondition1[l][0]==80&&limitCondition1[l][1]==1&&limitCondition1[l][2]==8&&rmax[n]==8&&candidate[m]==8)
+						if(setdone==3)
+						{
+							SIB2_NB_S->flag_NPRACH_Change=true;
+							return 1;
+						}
+						if(limitCondition1[l][0]==1280&&limitCondition1[l][1]==4&&limitCondition1[l][2]==8&&rmax[n]==32&&candidate[m]==8)
 						{
 							// LOG("Test CE0\n");
 							SIB2_NB_S->target_SNR[0]=14.25-OffsetSNR[0];
@@ -165,16 +170,16 @@ int Filter_SIB2_NB_Config(SIB2_NB * SIB2_NB_S)
 							SIB2_NB_S->period[0]=limitCondition1[l][0];
 							SIB2_NB_S->rep[0]=limitCondition1[l][1];
 							SIB2_NB_S->start_time[0]=limitCondition1[l][2];
-							SIB2_NB_S->num_Subcarrier[0]=12;
+							SIB2_NB_S->num_Subcarrier[0]=24;
 							SIB2_NB_S->subcarrier_Offset[0]=0;
 							SIB2_NB_S->npdcch_NumRepetitions_RA[0]=rmax[n];
-							SIB2_NB_S->npdcch_StartSF_CSS_RA[0]=32;
-							SIB2_NB_S->npdcch_Offset_RA[0]=0;
+							SIB2_NB_S->npdcch_StartSF_CSS_RA[0]=4;//G
+							SIB2_NB_S->npdcch_Offset_RA[0]=0;//Alpha offset
 							SIB2_NB_S->rawindow[0]=2;//2pp
 							SIB2_NB_S->candidate[0]=candidate[m];//8, DCI RepNum(00)-->rmax[m]/8=R(1)
 							setdone++;
 						}
-						else if(limitCondition1[l][0]==80&&limitCondition1[l][1]==2&&limitCondition1[l][2]==8&&rmax[n]==16&&candidate[m]==8)
+						else if(limitCondition1[l][0]==1280&&limitCondition1[l][1]==8&&limitCondition1[l][2]==8&&rmax[n]==32&&candidate[m]==4)
 						{
 							// LOG("Test CE1\n");
 							SIB2_NB_S->target_SNR[1]=14.25-OffsetSNR[1];
@@ -183,15 +188,15 @@ int Filter_SIB2_NB_Config(SIB2_NB * SIB2_NB_S)
 							SIB2_NB_S->rep[1]=limitCondition1[l][1];
 							SIB2_NB_S->start_time[1]=limitCondition1[l][2];
 							SIB2_NB_S->num_Subcarrier[1]=12;
-							SIB2_NB_S->subcarrier_Offset[1]=12;
+							SIB2_NB_S->subcarrier_Offset[1]=24;
 							SIB2_NB_S->npdcch_NumRepetitions_RA[1]=rmax[n];
-							SIB2_NB_S->npdcch_StartSF_CSS_RA[1]=16;
-							SIB2_NB_S->npdcch_Offset_RA[1]=0.125;
+							SIB2_NB_S->npdcch_StartSF_CSS_RA[1]=4;
+							SIB2_NB_S->npdcch_Offset_RA[1]=0;
 							SIB2_NB_S->rawindow[1]=2;
 							SIB2_NB_S->candidate[1]=candidate[m];//8, DCI RepNum(00)-->rmax[m]/8=R(2)
 							setdone++;
 						}
-						else if(limitCondition1[l][0]==80&&limitCondition1[l][1]==4&&limitCondition1[l][2]==8&&rmax[n]==32&&candidate[m]==8)
+						else if(limitCondition1[l][0]==1280&&limitCondition1[l][1]==16&&limitCondition1[l][2]==8&&rmax[n]==32&&candidate[m]==2)
 						{
 							// LOG("Test CE2\n");
 							SIB2_NB_S->target_SNR[2]=14.25-OffsetSNR[2];
@@ -199,11 +204,11 @@ int Filter_SIB2_NB_Config(SIB2_NB * SIB2_NB_S)
 							SIB2_NB_S->period[2]=limitCondition1[l][0];
 							SIB2_NB_S->rep[2]=limitCondition1[l][1];
 							SIB2_NB_S->start_time[2]=limitCondition1[l][2];
-							SIB2_NB_S->num_Subcarrier[2]=24;
-							SIB2_NB_S->subcarrier_Offset[2]=24;
+							SIB2_NB_S->num_Subcarrier[2]=12;
+							SIB2_NB_S->subcarrier_Offset[2]=36;
 							SIB2_NB_S->npdcch_NumRepetitions_RA[2]=rmax[n];
-							SIB2_NB_S->npdcch_StartSF_CSS_RA[2]=8;
-							SIB2_NB_S->npdcch_Offset_RA[2]=0.375;
+							SIB2_NB_S->npdcch_StartSF_CSS_RA[2]=4;
+							SIB2_NB_S->npdcch_Offset_RA[2]=0;
 							SIB2_NB_S->rawindow[2]=2;
 							SIB2_NB_S->candidate[2]=candidate[m];//8, DCI RepNum(00)-->rmax[m]/8=R(4)
 							setdone++;

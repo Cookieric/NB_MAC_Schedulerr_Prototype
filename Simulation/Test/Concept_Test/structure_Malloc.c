@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 struct person {
    int age;
    float weight;
@@ -24,8 +25,10 @@ typedef enum channel_e{
 
 channel_t *DL_Channle_bitmap;
 
+
 int main()
 {
+
 	int subframes=0,NPDCCH_period=256;
 	DL_Channle_bitmap=(channel_t *)calloc(NPDCCH_period,sizeof(channel_t));
 	DL_Channle_bitmap[subframes]=NPBCH;

@@ -5,45 +5,53 @@
 #include "type_NB.h"
 #include <stdbool.h>
 
-typedef struct _RA_list_NB
-{
-	bool generate_RAR;
-	bool generate_Msg4;
-}RA_list_NB;
+#include "interface_NB.h"
 
-
-typedef struct _UE_list_NB
+typedef struct _UE_TEMPLATE_NB
 {
-	//Get from SIB2-NB
+	//Get from preamble base on NPRACH Config
 	uint8_t CE_Level;	//After decode preamble, eNB will know UE's CE level.
-	//Get from Msg1
-	int multi_tone_Msg3;// 0: not support; 1:support
-	//Msg3 MAC Control Element
-	int UE_id;		//UE_id determine by TC-RNTI in RAR
-	int DV;	//BS know UE's UL Buffer Data Size.(CP solution)
-	int PHR;	//BS know UE's Power budget.
+	//C-RNTI of UE
+	rnti_t rnti;
+	uint32_t UE_id;
+	// NDI from last DL scheduling
+  	uint8_t oldNDI;// not used for now.
+  	// NDI from last UL scheduling
+  	uint8_t oldNDI_UL;
+  	uint8_t CRC_indication;
+	// Flag to indicate UL has been scheduled at least once
+ 	bool ul_active;
+	// Flag to indicate UE has been configured (ACK from RRCConnectionSetup received)
+	bool configured;//After receive Msg3 in subframe n, recevice ACK for Msg4 in subframe n+pp
+	uint8_t PHR;	//BS know UE's Power budget.
 	//Msg3 content
-	int multi_tone;// 0: not support; 1:support
-	//BSR
-	int shortBSR;
+	uint8_t multi_tone;// 0: not support; 1:support
+	uint8_t DV;//DV
+	uint8_t BSR;//shortBSR
 	//Scheduled Parameters
-	int Priority;	 //BS determine priority depends on DV/BSR, more tone be used or CE level
-	int UL_Buffer_Sizes;
-	int allocate_Buffer_Sizes;
-	int mcs;//mcs Index
-	int Qm;
+	uint8_t	Priority;// not used for now, Priority base on size of DV/BSR...
+	uint32_t UL_Buffer_Size;
+	uint32_t allocate_Buffer_Size;
+	uint8_t mcs;//mcs Index
+	uint8_t Qm;
 	int round;
-	int remaining_Buffer_Sizes;
-	int startFreqPos;
+	uint32_t remaining_Buffer_Sizes;
+	int startFreqPos;//Isc
 	//NPUSCH RU Table
-	int startScheMsg3;
 	int num_tone;
 	int num_UL_Slot;
-	int UE_num_RU;
+	int num_RU;
 	int remainging_subframe;
-}UE_list_NB;
+	//Sche_Ctrl
+	uint32_t first_Arrival_Time;//Msg3 arrival time
+	uint32_t sche_Msg5_Time;
+	uint32_t next_Arrival_Time;
+}UE_TEMPLATE_NB;
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*Schedule Helper*/
 //SIB1_Helper_Fun
 uint32_t repetiitonSIB1(uint32_t);
@@ -54,9 +62,16 @@ uint32_t get_si_windowStart(SIB1_NB *,frame_t);
 uint32_t get_si_scheSubframe(uint32_t);
 
 /*Schedule Function*/
-void NB_shceudle_fixed(frame_t,sub_frame_t,uint32_t,uint32_t *);//schedule NPSS/NSSS/NPBCH
-void NB_shceudle_SI(frame_t,sub_frame_t,uint32_t,uint32_t *,MIB_NB *,SIB1_NB *);//schedule SIB1/SIB2...
-void NB_shceudle_RA(frame_t,sub_frame_t,uint32_t *,uint32_t **);
-void NB_shceudle_ulsch(frame_t,sub_frame_t,uint32_t *,uint32_t **);
-void NB_shceudle_dlsch(frame_t,sub_frame_t,uint32_t *);
+void NB_schedule_MIB(frame_t,sub_frame_t,uint32_t,uint32_t *,bool);//schedule NPBCH
+void NB_schedule_SI(frame_t,sub_frame_t,uint32_t,uint32_t *,MIB_NB *,SIB1_NB *,bool);//sche SIB1/23
+void NB_schedule_RA(frame_t,sub_frame_t,uint32_t *,uint32_t **);
+void NB_schedule_ulsch(frame_t,sub_frame_t,uint32_t,uint32_t *,uint32_t **,SIB2_NB *,UL_IND_t &);
+void NB_schedule_dlsch(frame_t,sub_frame_t,uint32_t *);
+
+uint8_t DCIs_resource_determinaiton(uint32_t,uint32_t,SIB2_NB *,list<UE_TEMPLATE_NB> &,Sche_RES_t & ,uint32_t *);
+uint32_t resourceAllocation(SIB2_NB *,uint32_t **,list<UE_TEMPLATE_NB> &);
+#ifdef __cplusplus
+}
+#endif
+
 #endif

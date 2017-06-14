@@ -11,9 +11,9 @@
 // typedef long int32_t;
 
 
-typedef uint32_t frame_t;
-typedef uint8_t sub_frame_t;
-
+typedef uint32_t	frame_t;
+typedef uint8_t	sub_frame_t;
+typedef uint16_t	rnti_t;
 
 typedef enum operationMode{
 	inband_SamePCI=0,

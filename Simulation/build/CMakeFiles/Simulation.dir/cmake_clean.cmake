@@ -1,8 +1,8 @@
 file(REMOVE_RECURSE
   "CMakeFiles/Simulation.dir/rrc_NB.c.obj"
-  "CMakeFiles/Simulation.dir/eNB_scheduler_NB.c.obj"
-  "CMakeFiles/Simulation.dir/eNB_shcedule_function_NB.c.obj"
-  "CMakeFiles/Simulation.dir/eNB_shcedule_helper_NB.c.obj"
+  "CMakeFiles/Simulation.dir/eNB_scheduler_NB.cpp.obj"
+  "CMakeFiles/Simulation.dir/eNB_schedule_function_NB.cpp.obj"
+  "CMakeFiles/Simulation.dir/eNB_schedule_helper_NB.cpp.obj"
   "Simulation.pdb"
   "Simulation.exe"
   "Simulation.exe.manifest"
@@ -10,6 +10,6 @@ file(REMOVE_RECURSE
 )
 
 # Per-language clean rules from dependency scanning.
-foreach(lang C)
+foreach(lang C CXX)
   include(CMakeFiles/Simulation.dir/cmake_clean_${lang}.cmake OPTIONAL)
 endforeach()
