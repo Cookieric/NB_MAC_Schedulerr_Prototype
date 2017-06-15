@@ -86,6 +86,7 @@ int main(void)
 		{
 			LOG("H_SFN:%d,frame:%d,subframes:%d,Build next pp(%d~%d)struc for UL/DL at previous SF of each pp\n",H_SFN,frame,subframes,(frame*10+subframes+1),(frame*10+subframes+1+NPDCCH_period));
 			// system("pause");
+			n_pp++;
 			//	calloc initialize to 0 -> channel_t.NA
 			UL_Channel_bitmap= (uint32_t **)calloc(num_UL_Subcarrier,sizeof(uint32_t *));
 			// // UL_Channel_bitmap= (uint32_t **)malloc(num_UL_Subcarrier * sizeof(uint32_t *));
@@ -107,7 +108,7 @@ int main(void)
 			NB_schedule_MIB(frame,subframes,NPDCCH_period,DL_Channel_bitmap,false);//NPBCH
 			NB_schedule_SI(frame,subframes,NPDCCH_period,DL_Channel_bitmap,&MIB_NB_S, &SIB1_NB_S,false);
 			// NB_schedule_RA(frame,subframes,DL_Channel_bitmap,UL_Channel_bitmap);
-			NB_schedule_ulsch(frame,subframes,NPDCCH_period,DL_Channel_bitmap,UL_Channel_bitmap,&SIB2_NB_S,UL_Indicaiton);
+			// NB_schedule_ulsch(frame,subframes,NPDCCH_period,DL_Channel_bitmap,UL_Channel_bitmap,&SIB2_NB_S,UL_Indicaiton);
 			// NB_schedule_dlsch(frame,subframes,DL_Channel_bitmap);
 		}
 

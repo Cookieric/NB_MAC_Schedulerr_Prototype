@@ -157,8 +157,8 @@ void NB_schedule_SI(frame_t frame,sub_frame_t subframes,uint32_t NPDCCH_period,u
 			}
 		}
 		if((scheFrame==t_si_Period)&&(scheSubframe==9))	lock=false;//Wake up scheSIB2 at the end of this si-period.
-		// LOG("frame:%d,subframe:%d,Channel:%s\n",scheFrame,scheSubframe,channel_N[DL_Channel_bitmap[i]]);
-		// system("pause");
+		LOG("frame:%d,subframe:%d,Channel:%s\n",scheFrame,scheSubframe,channel_N[DL_Channel_bitmap[i]]);
+		system("pause");
 		++scheSubframe;
 		if(scheSubframe==10)
 		{

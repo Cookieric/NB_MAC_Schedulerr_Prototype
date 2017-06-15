@@ -139,8 +139,8 @@ uint8_t DCIs_resource_determinaiton(uint32_t scheFrame,uint32_t scheSubframe,SIB
 	// DCI_Queue.DCI_Format.DCI_UL_PDUendTime;
 	// DCI_Queue.DCI_Format.DCI_UL_PDU.DCIN0
   	//queue<HI_DCI0_request_t> & DCI_Queue
-	queue<HI_DCI0_request_t> & DCI_Queue=Sche_Response.DCI_Q;
-  	HI_DCI0_request_t DCI_q;
+	list<HI_DCI0_request_t> & DCI_List=Sche_Response.DCI_L;
+  	HI_DCI0_request_t DCI_Info;
   	bool DCI_set;
   	uint32_t index_S=0;//record index of current occupued search space....
 	for (it1=UE_Info_List.begin(); it1!=UE_Info_List.end();++it1)
@@ -156,21 +156,23 @@ uint8_t DCIs_resource_determinaiton(uint32_t scheFrame,uint32_t scheSubframe,SIB
 					{
 						if(index_S==(*V_it))//0=0;4=4;8=8....28=28
 						{
-							DCI_Queue.push (DCI_q);
+							DCI_List.push_back  (DCI_Info);
+                            typename list<HI_DCI0_request_t>::iterator DCI_it1 = DCI_List.end();
+                            --DCI_it1;
 							//Actual timing: Sche_H_SFN * 10240+scheFrame * 10+scheSubframe
-							DCI_Queue.DCI_Format.DCI_UL_PDU.startTime=Sche_H_SFN * 10240+scheFrame * 10+scheSubframe;
+							(*DCI_it1).DCI_Format.DCI_UL_PDU.startTime=Sche_H_SFN * 10240+scheFrame * 10+scheSubframe;
 							for (int j = i; j < NPDCCH_period; ++j)
 							{
 								if(DL_Channel_bitmap[j]==NA)
 								{
 									DL_Channel_bitmap[j]==NPDCCH;
-									DCI_Queue.DCI_Format.DCI_UL_PDU.cntR++;
+									(*DCI_it1).DCI_Format.DCI_UL_PDU.cntR++;
 									index_S++;
 								}
-								if(DCI_Queue.DCI_Format.DCI_UL_PDU.cntR==R[0])
+								if((*DCI_it1).DCI_Format.DCI_UL_PDU.cntR==R[0])
 								{
 									//Actual timing: Sche_H_SFN * 10240+scheFrame * 10+scheSubframe
-									DCI_Queue.DCI_Format.DCI_UL_PDU.endTime=j;// j used by following Idelay/Isc caculaiton
+									(*DCI_it1).DCI_Format.DCI_UL_PDU.endTime=j;// j used by following Idelay/Isc caculaiton
 									DCI_set=true;
 									break;
 								}
