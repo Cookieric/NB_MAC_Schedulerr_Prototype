@@ -17,6 +17,7 @@ using namespace std;
 
 uint32_t sib1_Period=256;//256 RF
 bool shcedSIB1=false,schedSIB2=false,lock=false;
+// extern uint32_t NPDCCH_period[3];
 extern uint32_t NPDCCH_period;
 uint32_t si_RepetitionPattern[4]={1,4,3};
 
@@ -46,7 +47,7 @@ char channel_N[L_channels][10] = {
 };
 
 //schedule NPBCH and reserve NPSS/NSSS on virtual DL channel
-void NB_schedule_MIB(frame_t frame,sub_frame_t subframes,uint32_t NPDCCH_period,uint32_t *DL_Channel_bitmap, bool initialSche)
+void reserve_schedule_MIB(frame_t frame,sub_frame_t subframes,uint32_t NPDCCH_period,uint32_t *DL_Channel_bitmap, bool initialSche)
 {
 	uint32_t scheSubframe=0,scheFrame=0;
 	// int i;
@@ -83,7 +84,7 @@ void NB_schedule_MIB(frame_t frame,sub_frame_t subframes,uint32_t NPDCCH_period,
 }
 
 uint32_t t_si_Period,t_si_windowStart,si_windowEnd;
-void NB_schedule_SI(frame_t frame,sub_frame_t subframes,uint32_t NPDCCH_period,uint32_t *DL_Channel_bitmap,MIB_NB * MIB_NB_S, SIB1_NB * SIB1_NB_S,bool initialSche)//schedule SIB1/SIB2/3
+void reserve_schedule_SI(frame_t frame,sub_frame_t subframes,uint32_t NPDCCH_period,uint32_t *DL_Channel_bitmap,MIB_NB * MIB_NB_S, SIB1_NB * SIB1_NB_S,bool initialSche)//schedule SIB1/SIB2/3
 {
 	/*SIB1-NB in subframe #4 of every other frame in 16 continuous frames. Period = 256RF*/
 	uint32_t repetitionNum_SIB1=repetiitonSIB1(MIB_NB_S->schedulingInfoSIB1);
@@ -206,9 +207,10 @@ void NB_schedule_ulsch(frame_t frame,sub_frame_t subframes,uint32_t NPDCCH_perio
 	typename list<UE_TEMPLATE_NB>::iterator it1;// distinguish Template and type
 	for (it1=UE_Info_List.begin(); it1!=UE_Info_List.end();++it1)
 	{
-		if(((*it1).configured==true)&&((*it1).CRC_indication==0))//Ready to schedule Msg5
+		if(((*it1).configured==true)&&((*it1).CRC_indication==0))//Ready to schedule Msg5,ULInfo...
 		{
-			(*it1).sche_Msg5_Time=(*it1).first_Arrival_Time+NPDCCH_period;
+			if((*it1).sche_Msg5_Time==-1)	(*it1).sche_Msg5_Time=(*it1).first_Arrival_Time+NPDCCH_period;
+			else	(*it1).next_Arrival_Time=(*it1).first_Arrival_Time+NPDCCH_period;
 		}
 		else if(((*it1).configured==false)&&((*it1).CRC_indication==1))//Ready to reschedule Msg3
 		{

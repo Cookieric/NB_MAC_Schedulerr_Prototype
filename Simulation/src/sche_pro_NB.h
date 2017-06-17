@@ -62,8 +62,12 @@ uint32_t get_si_windowStart(SIB1_NB *,frame_t);
 uint32_t get_si_scheSubframe(uint32_t);
 
 /*Schedule Function*/
-void NB_schedule_MIB(frame_t,sub_frame_t,uint32_t,uint32_t *,bool);//schedule NPBCH
-void NB_schedule_SI(frame_t,sub_frame_t,uint32_t,uint32_t *,MIB_NB *,SIB1_NB *,bool);//sche SIB1/23
+void reserve_schedule_MIB(frame_t,sub_frame_t,uint32_t,uint32_t *,bool);//schedule NPBCH
+void reserve_schedule_SI(frame_t,sub_frame_t,uint32_t,uint32_t *,MIB_NB *,SIB1_NB *,bool);//sche SIB1/23
+
+void NB_schedule_MIB(frame_t,sub_frame_t,uint32_t,uint32_t *,bool);//Send schedConfig and MIB PDU to PHY
+void NB_schedule_SI(frame_t,sub_frame_t,uint32_t,uint32_t *,MIB_NB *,SIB1_NB *,bool);//Send schedConfig, SIB1/23 PDU to PHY
+
 void NB_schedule_RA(frame_t,sub_frame_t,uint32_t *,uint32_t **);
 void NB_schedule_ulsch(frame_t,sub_frame_t,uint32_t,uint32_t *,uint32_t **,SIB2_NB *,UL_IND_t &);
 void NB_schedule_dlsch(frame_t,sub_frame_t,uint32_t *);

@@ -347,26 +347,31 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 			system("pause");
 		}
 	}
-	else//check UL_UE_Info. if BSR arrival
-	{
-		// UE_TEMPLATE_NB UL_UE_Info;
-		// list<UE_TEMPLATE_NB> % UE_Info_List = UL_Indicaiton.UL_UE_Info_List;
-		// typename list<UE_TEMPLATE_NB>::iterator it1;
-		for (it1=UE_Info_List.begin(); it1!=UE_Info_List.end();++it1)
-		{
-			if((H_SFN * 10240+frame * 10+subframes)==(*it1).next_Arrival_Time)
-			{
-				(*it1).CRC_indication=get_CRC_indication();
-				(*it1).round=1;
-				(*it1).BSR=get_BSR_index((*it1).remaining_Buffer_Sizes);
-				(*it1).UL_Buffer_Size=BSR_table[(*it1).BSR];
-			}
-		}
-	}
-	if(H_SFN * 10240+frame * 10+subframes==(*it1).sche_Msg5_Time)
-	{
-		(*it1).configured=true;//Receive ACK for Msg4
-	}
+
+    for (it1=UE_Info_List.begin(); it1!=UE_Info_List.end();++it1)
+    {
+    	if((H_SFN * 10240+frame * 10+subframes)==(*it1).next_Arrival_Time)//next_Arrival_Time=UL transmission end subframe
+    	{
+
+    		// UE_TEMPLATE_NB UL_UE_Info;
+    		// list<UE_TEMPLATE_NB> % UE_Info_List = UL_Indicaiton.UL_UE_Info_List;
+    		// typename list<UE_TEMPLATE_NB>::iterator it1;
+    		for (it1=UE_Info_List.begin(); it1!=UE_Info_List.end();++it1)
+    		{
+    			if((H_SFN * 10240+frame * 10+subframes)==(*it1).next_Arrival_Time)
+    			{
+    				(*it1).CRC_indication=get_CRC_indication();
+    				(*it1).round=1;
+    				(*it1).BSR=get_BSR_index((*it1).remaining_Buffer_Sizes);
+    				(*it1).UL_Buffer_Size=BSR_table[(*it1).BSR];
+    			}
+    		}
+    	}
+    	if(H_SFN * 10240+frame * 10+subframes==(*it1).sche_Msg5_Time)
+    	{
+    		(*it1).configured=true;//Receive ACK for Msg4
+    	}
+    }
 }
 
 bool compareMyType (const Pattern_base &a, const Pattern_base &b)

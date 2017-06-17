@@ -4,6 +4,7 @@
 
 
 uint32_t NPDCCH_period=0;
+// uint32_t NPDCCH_period[3]={0,0,0};
 
 
 char NameOperationMode[num_operationMode][20] = {
@@ -32,6 +33,9 @@ int NB_eNB_Init_RRC(MIB_NB * MIB_NB_S, SIB1_NB * SIB1_NB_S, SIB2_NB * SIB2_NB_S,
 	Initial_UE_Specific_Config(Msg4_S);
 	//All pp are the same for three CE levels
 	NPDCCH_period=SIB2_NB_S->npdcch_NumRepetitions_RA[0] * SIB2_NB_S->npdcch_StartSF_CSS_RA[0];
+	// NPDCCH_period[0]=SIB2_NB_S->npdcch_NumRepetitions_RA[0] * SIB2_NB_S->npdcch_StartSF_CSS_RA[0];
+	// NPDCCH_period[1]=SIB2_NB_S->npdcch_NumRepetitions_RA[1] * SIB2_NB_S->npdcch_StartSF_CSS_RA[1];
+	// NPDCCH_period[2]=SIB2_NB_S->npdcch_NumRepetitions_RA[2] * SIB2_NB_S->npdcch_StartSF_CSS_RA[2];
 	return 1;
 }
 

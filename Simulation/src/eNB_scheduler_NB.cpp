@@ -11,6 +11,8 @@
 using namespace std;
 
 extern uint32_t NPDCCH_period;
+// extern uint32_t NPDCCH_period[3];
+
 uint32_t n_pp=0;//number of  NPDCCH_period
 uint32_t **UL_Channel_bitmap;
 uint32_t * element;
@@ -49,7 +51,10 @@ int main(void)
 	RRCCoonectionSetup_NB Msg4_S={0};
 	if(NB_eNB_Init_RRC(&MIB_NB_S, &SIB1_NB_S, &SIB2_NB_S,&Msg4_S))	LOG("Initialize RRC done\n");
 	printSIs(&MIB_NB_S,&SIB1_NB_S,&SIB2_NB_S,&Msg4_S);
-	LOG("NPDCCH_period:%d\n",NPDCCH_period);
+	LOG("CE 0 NPDCCH_period:%d\n",NPDCCH_period);
+	// LOG("CE 0 NPDCCH_period:%d\n",NPDCCH_period[0]);
+	// LOG("CE 1 NPDCCH_period:%d\n",NPDCCH_period[1]);
+	// LOG("CE 2 NPDCCH_period:%d\n",NPDCCH_period[2]);
 	// LOG("%d",channels_length);
 
 
@@ -74,8 +79,8 @@ int main(void)
 	//Initial schedule for MIB/SIB1/23 before H_SFN:0,SFN:0,SF:0 in RUN_Status
 	LOG("H_SFN:%d,frame:%d,subframes:%d,Schedule next pp(%d~%d) for UL/DL at previous SF of each p\n",H_SFN,frame,subframes,(frame*10+subframes),(frame*10+subframes+NPDCCH_period));
 	system("pause");
-	NB_schedule_MIB(frame,subframes,NPDCCH_period,DL_Channel_bitmap,true);//NPBCH
-	NB_schedule_SI(frame,subframes,NPDCCH_period,DL_Channel_bitmap,&MIB_NB_S, &SIB1_NB_S,true);
+	reserve_schedule_MIB(frame,subframes,NPDCCH_period,DL_Channel_bitmap,true);//NPBCH
+	reserve_schedule_SI(frame,subframes,NPDCCH_period,DL_Channel_bitmap,&MIB_NB_S, &SIB1_NB_S,true);
 	//NPDCCH Period base scheudling for MIB/SIB1/23 and UL;  RA and DL not done.
 	while(1)
 	{
@@ -100,13 +105,21 @@ int main(void)
 			// LOG("frame:%d,subframes:%d\n",frame,subframes);
 			// Check if UL_data/Msg3/Msg5/Other UL RRC Msg3 arrival before schedule ulsch/dlsch
 		}
-		//Schedule UL/DL virtual channel structure at the start of previous SF of each pp.
+		//Schedule MIB base on period.
+		if((H_SFN * 10240+frame * 10+subframes+1)%640==0)
+			// NB_schedule_MIB(frame,subframes,NPDCCH_period,DL_Channel_bitmap,false);//NPBCH
+		//Schedule SI base on period.
+
+		if(((H_SFN * 10240+frame * 10+subframes+1)%2560==0)||((H_SFN * 10240+frame * 10+subframes+1)%SIB1_NB_S.si_Periodicity==0))
+			// NB_schedule_SI(frame,subframes,NPDCCH_period,DL_Channel_bitmap,&MIB_NB_S, &SIB1_NB_S,false);
+
+		//Schedule RA/UL/DL virtual channel structure at the start of previous SF of each pp.
 		if(((H_SFN * 10240+frame * 10+subframes+1)%NPDCCH_period)==0)
 		{
 			LOG("H_SFN:%d,frame:%d,subframes:%d,Schedule next pp(%d~%d) for UL/DL at previous SF of each p\n",H_SFN,frame,subframes,(frame*10+subframes+1),(frame*10+subframes+1+NPDCCH_period));
 			system("pause");
-			NB_schedule_MIB(frame,subframes,NPDCCH_period,DL_Channel_bitmap,false);//NPBCH
-			NB_schedule_SI(frame,subframes,NPDCCH_period,DL_Channel_bitmap,&MIB_NB_S, &SIB1_NB_S,false);
+			reserve_schedule_MIB(frame,subframes,NPDCCH_period,DL_Channel_bitmap,false);//filter DL valid SF
+			reserve_schedule_SI(frame,subframes,NPDCCH_period,DL_Channel_bitmap,&MIB_NB_S, &SIB1_NB_S,false);//filter DL valid SF
 			// NB_schedule_RA(frame,subframes,DL_Channel_bitmap,UL_Channel_bitmap);
 			// NB_schedule_ulsch(frame,subframes,NPDCCH_period,DL_Channel_bitmap,UL_Channel_bitmap,&SIB2_NB_S,UL_Indicaiton);
 			// NB_schedule_dlsch(frame,subframes,DL_Channel_bitmap);
