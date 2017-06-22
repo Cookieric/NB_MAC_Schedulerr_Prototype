@@ -3,14 +3,15 @@
 #include "dci_NB.h"
 #include "sche_pro_NB.h"
 #include <list>
-#include <queue>
+
 
 using namespace std;
 
 
+
 typedef struct UL_IND
 {
-	list<struct _UE_TEMPLATE_NB> UL_UE_Info_List;
+	list<struct _UE_TEMPLATE_NB> UL_UE_Info_List[3];
 	//ACK/NACK
 	//preamble_List
 }UL_IND_t;

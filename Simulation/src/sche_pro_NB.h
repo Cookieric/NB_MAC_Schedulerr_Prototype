@@ -7,6 +7,7 @@
 
 #include "interface_NB.h"
 
+
 typedef struct _UE_TEMPLATE_NB
 {
 	//Get from preamble base on NPRACH Config
@@ -23,6 +24,8 @@ typedef struct _UE_TEMPLATE_NB
  	bool ul_active;
 	// Flag to indicate UE has been configured (ACK from RRCConnectionSetup received)
 	bool configured;//After receive Msg3 in subframe n, recevice ACK for Msg4 in subframe n+pp
+	bool schedStatus;
+	bool schedMsg3;
 	uint8_t PHR;	//BS know UE's Power budget.
 	//Msg3 content
 	uint8_t multi_tone;// 0: not support; 1:support
@@ -44,10 +47,16 @@ typedef struct _UE_TEMPLATE_NB
 	int remainging_subframe;
 	//Sche_Ctrl
 	uint32_t first_Arrival_Time;//Msg3 arrival time
-	uint32_t sche_Msg5_Time;
+	int32_t sche_Msg5_Time;
 	uint32_t next_Arrival_Time;
 }UE_TEMPLATE_NB;
 
+typedef struct _Pattern_base {
+	int startFreq;
+	int endFreq;
+	int FreqUnit;
+	int assignedPrio;
+}Pattern_base;
 
 #ifdef __cplusplus
 extern "C" {
@@ -58,22 +67,34 @@ uint32_t repetiitonSIB1(uint32_t);
 uint32_t RFstartSIB1(uint32_t);
 uint32_t getTBS_SIB1(uint32_t);
 //SIB2_Helper_Fun
-uint32_t get_si_windowStart(SIB1_NB *,frame_t);
+uint32_t get_si_windowStart(SIB1_NB &,frame_t);
 uint32_t get_si_scheSubframe(uint32_t);
 
 /*Schedule Function*/
-void reserve_schedule_MIB(frame_t,sub_frame_t,uint32_t,uint32_t *,bool);//schedule NPBCH
-void reserve_schedule_SI(frame_t,sub_frame_t,uint32_t,uint32_t *,MIB_NB *,SIB1_NB *,bool);//sche SIB1/23
+// void reserve_schedule_MIB(frame_t,sub_frame_t,uint32_t,uint32_t *,bool);//schedule NPBCH
+// void reserve_schedule_SI(frame_t,sub_frame_t,uint32_t,uint32_t *,MIB_NB *,SIB1_NB *,bool);//sche SIB1/23
 
 void NB_schedule_MIB(frame_t,sub_frame_t,uint32_t,uint32_t *,bool);//Send schedConfig and MIB PDU to PHY
 void NB_schedule_SI(frame_t,sub_frame_t,uint32_t,uint32_t *,MIB_NB *,SIB1_NB *,bool);//Send schedConfig, SIB1/23 PDU to PHY
 
 void NB_schedule_RA(frame_t,sub_frame_t,uint32_t *,uint32_t **);
-void NB_schedule_ulsch(frame_t,sub_frame_t,uint32_t,uint32_t *,uint32_t **,SIB2_NB *,UL_IND_t &);
+// void NB_schedule_ulsch(frame_t,sub_frame_t,uint32_t,uint32_t *,uint32_t **,SIB2_NB *,UL_IND_t &);
+void NB_schedule_ulsch(uint32_t,frame_t,sub_frame_t,uint32_t,MIB_NB &,SIB1_NB &,SIB2_NB &,UL_IND_t &);
 void NB_schedule_dlsch(frame_t,sub_frame_t,uint32_t *);
 
-uint8_t DCIs_resource_determinaiton(uint32_t,uint32_t,SIB2_NB *,list<UE_TEMPLATE_NB> &,Sche_RES_t & ,uint32_t *);
-uint32_t resourceAllocation(SIB2_NB *,uint32_t **,list<UE_TEMPLATE_NB> &);
+
+uint32_t get_DCI_Filed(const uint32_t,uint32_t);
+uint32_t num_ULslots(uint32_t);
+uint32_t get_I_RU(uint32_t);
+uint32_t get_I_TBS(uint32_t,uint32_t);
+uint32_t get_TBS_UL(uint32_t,uint32_t,uint32_t &,bool &);
+uint32_t check_if_NPRACH(SIB2_NB &,uint32_t,uint32_t);
+bool compareMyType3 (const UE_TEMPLATE_NB &, const UE_TEMPLATE_NB &);
+uint32_t check_if_DL_subframe(uint32_t,uint32_t,uint32_t,MIB_NB &,SIB1_NB &);
+// uint8_t DCIs_resource_determinaiton(uint32_t,uint32_t,SIB2_NB *,list<UE_TEMPLATE_NB> &,Sche_RES_t & ,uint32_t *);
+uint8_t DCIs_resource_determinaiton(uint32_t,uint32_t,uint32_t,uint32_t,MIB_NB &,SIB1_NB &,SIB2_NB &,list<UE_TEMPLATE_NB> &,list<HI_DCI0_request_t> &);
+// uint32_t resourceAllocation(SIB2_NB *,uint32_t **,list<UE_TEMPLATE_NB> &);
+uint32_t resourceAllocation(SIB2_NB &,list<UE_TEMPLATE_NB> &);
 #ifdef __cplusplus
 }
 #endif

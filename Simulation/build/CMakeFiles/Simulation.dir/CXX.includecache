@@ -27,6 +27,8 @@ list
 -
 queue
 -
+iostream
+-
 
 C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/eNB_schedule_helper_NB.cpp
 stdio.h
@@ -59,7 +61,11 @@ stdbool.h
 -
 time.h
 -
+iostream
+-
 list
+-
+vector
 -
 rrc_NB.h
 C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/rrc_NB.h
@@ -76,8 +82,6 @@ C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/dci_
 sche_pro_NB.h
 C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/sche_pro_NB.h
 list
--
-queue
 -
 
 C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/rrc_NB.h

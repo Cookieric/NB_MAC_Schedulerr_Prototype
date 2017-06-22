@@ -48,7 +48,7 @@ typedef struct _SIB2_NB{
 	uint32_t npdcch_NumRepetitions_RA[3];//Max # of repetitions for NPDCCH common search space (CSS) for RAR, Msg3 retransmission and Msg4
 	uint32_t npdcch_StartSF_CSS_RA[3];//Starting subframe configuration for NPDCCH common search space (CSS), including RAR, Msg3 retransmission, and Msg4
 	float npdcch_Offset_RA[3];//Fractional period offset of starting subframe for NPDCCH common search space (CSS Type 2)
-	bool flag_NPRACH_Change;
+	// bool flag_NPRACH_Change;
 	/*SIB2-->RadioResourceConfigCommonSIB-NB-r13-->RACH-ConfigCommon-NB:*/
 	uint32_t rawindow[3];
 	uint32_t ContentionResolutionTimer[3];
@@ -87,5 +87,5 @@ void printSIs(MIB_NB * MIB_NB_S, SIB1_NB * SIB1_NB_S, SIB2_NB * SIB2_NB_S,RRCCoo
 
 int Filter_SIB2_NB_Config(SIB2_NB *);
 int checkFrequencyDomain(SIB2_NB *);
-void Initial_UE_Specific_Config(RRCCoonectionSetup_NB *);
+void Initial_UE_Specific_Config(RRCCoonectionSetup_NB *,SIB2_NB *);
 #endif
