@@ -175,14 +175,10 @@ char channel_N[L_channels][10] = {
 // }
 
 
-int availResource=0;
-int occupiedResource=0;
-int sumAvailResource=0;
-int sumOccupiedResource=0;
-
 uint32_t T_SearchSpace[3];
 bool scheFlag=false;
-Sche_RES_t Sche_Response;//Should defined in PHY.
+// Sche_RES_t Sche_Response;//Should defined in PHY.
+extern Sche_RES_t Sche_Response;
 // extern vector <uint32_t> b0,b1,b2;
 extern vector<vector<uint32_t> > locationS;
 extern uint32_t DCI_Rep[3];
@@ -190,26 +186,35 @@ extern vector<int> Sfreq;
 extern vector<uint32_t> UL_Channel;
 extern uint32_t totalNumUE ;
 
+
+int T_AvailResource[12]={0};
+int T_OccupiedResource[12]={0};
+int T_Average_Delay[12]={0};
+extern uint32_t simCase;
+
+// clock_t tStart = clock();
+// /* Do your stuff here */
+// printf("Time taken: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
+// return 0;
+
 // void NB_schedule_ulsch(frame_t frame,sub_frame_t subframes,uint32_t NPDCCH_period,uint32_t *DL_Channel_bitmap,
 // 	uint32_t **UL_Channel_bitmap,SIB2_NB * SIB2_NB_S,UL_IND_t & UL_Indicaiton)
 void NB_schedule_ulsch(uint32_t scheH_SFN,frame_t scheFrame,sub_frame_t scheSubframe,uint32_t CE_Level,MIB_NB & MIB_NB_S,SIB1_NB & SIB1_NB_S,SIB2_NB & SIB2_NB_S,UL_IND_t & UL_Indicaiton)
 {
 	DCI_UL_PDU_t * ULSCH_dci=NULL;
 	// uint32_t DCI_Rep[3]={SIB2_NB_S.rep[0],SIB2_NB_S.rep[1],SIB2_NB_S.rep[2]};
-	//UL scheduler maintain a DCI_Queue
-	// queue<HI_DCI0_request_t> & DCI_Queue=Sche_Response.DCI_Q;
-	// DCI_Queue.PDU_Type
-	// DCI_Queue.num_DCI
-	// DCI_Queue.DCI_Format.DCI_UL_PDU.NCCE_index
-	// DCI_Queue.DCI_Format.DCI_UL_PDU.Aggregation_L
-	// DCI_Queue.DCI_Format.DCI_UL_PDU.Start_symbol
-	// DCI_Queue.DCI_Format.DCI_UL_PDUstartTime;
-	// DCI_Queue.DCI_Format.DCI_UL_PDUendTime;
-	// DCI_Queue.DCI_Format.DCI_UL_PDU.DCIN0
+	//UL scheduler maintain a DCI_List
+	// queue<HI_DCI0_request_t> & DCI_List=Sche_Response.DCI_L;
+	// DCI_List.PDU_Type
+	// DCI_List.num_DCI
+	// DCI_List.DCI_Format.DCI_UL_PDU.NCCE_index
+	// DCI_List.DCI_Format.DCI_UL_PDU.Aggregation_L
+	// DCI_List.DCI_Format.DCI_UL_PDU.Start_symbol
+	// DCI_List.DCI_Format.DCI_UL_PDUstartTime;
+	// DCI_List.DCI_Format.DCI_UL_PDUendTime;
+	// DCI_List.DCI_Format.DCI_UL_PDU.DCIN0
 	// ! \brief UE list used by eNB to order UEs for scheduling
-	if(CE_Level==0)	scheFlag=true;
-	else if(CE_Level==1)	scheFlag=true;
-	else if(CE_Level==2)	scheFlag=true;
+	if(CE_Level==0 || CE_Level==1 || CE_Level==2)	scheFlag=true;
 	else	scheFlag=false;
 
 	if(scheFlag)//CE 0/1/2
@@ -226,7 +231,7 @@ void NB_schedule_ulsch(uint32_t scheH_SFN,frame_t scheFrame,sub_frame_t scheSubf
 		// DCI_Queue.DCI_Format.DCI_UL_PDUendTime;
 		// DCI_Queue.DCI_Format.DCI_UL_PDU.DCIN0
   		//queue<HI_DCI0_request_t> & DCI_Queue
-		uint32_t StartSearchSpace=scheH_SFN * 10240+ scheFrame * 10 + scheSubframe + SIB2_NB_S.npdcch_Offset_RA[CE_Level] * NPDCCH_period[CE_Level];
+		uint32_t StartSearchSpace=scheH_SFN * 1024+ scheFrame * 10 + scheSubframe + SIB2_NB_S.npdcch_Offset_RA[CE_Level] * NPDCCH_period[CE_Level];
 		T_SearchSpace[CE_Level]=SIB2_NB_S.npdcch_NumRepetitions_RA[CE_Level];
 		uint32_t cntSearchspace=0,cnt_default=0;// cnt used searchspace and # of control signal
 	  	// uint32_t index_S=0;//record index of current occupued search space....
@@ -243,16 +248,15 @@ void NB_schedule_ulsch(uint32_t scheH_SFN,frame_t scheFrame,sub_frame_t scheSubf
 				// LOG("frame %d subfarme %d, UE %d: not configured, skipping UE scheduling \n",
 				// scheFrame,scheSubframe,(*it1).UE_id);
 		    	(*it1).schedMsg3=true;
-		    	(*it1).UL_Buffer_Size=88;//Msg3 TBS fixed to 88 bits and Nru=1 and Imcs=010
 				LOG("Reschedule Msg3: CE_Level:%d, UE_id:%d,schedMsg3:%d\n",(*it1).CE_Level,(*it1).UE_id,(*it1).schedMsg3);
 				system("pause");
 				//Update Msg3 next_Arrival_Time after schedule Msg3
-				continue;//Pospone until the other stuff done...
+				// continue;//Pospone until the other stuff done...
 		    }
 		    //Wait until receive ack for Msg4, the time=sche_Msg5_Time
 		    if((*it1).configured==false&&((*it1).sche_Msg5_Time!=-1))
 		    {
-				LOG("CE_Level:%d,UE_id:%d,schedMsg3:%d,CRC_indication:%d,round:%d,multi_tone:%d,first_Arrival_Time:%d,sche_Msg5_Time:%d\n",(*it1).CE_Level,(*it1).UE_id,(*it1).schedMsg3,(*it1).CRC_indication,(*it1).round,(*it1).multi_tone,(*it1).PHR,(*it1).DV,(*it1).UL_Buffer_Size,(*it1).first_Arrival_Time,(*it1).sche_Msg5_Time);
+				LOG("CE_Level:%d,UE_id:%d,schedMsg3:%d,CRC_indication:%d,round:%d,multi_tone:%d,first_Arrival_Time:%d,sche_Msg5_Time:%d,UL_Buffer_Size:%d\n",(*it1).CE_Level,(*it1).UE_id,(*it1).schedMsg3,(*it1).CRC_indication,(*it1).round,(*it1).multi_tone,(*it1).PHR,(*it1).DV,(*it1).UL_Buffer_Size,(*it1).first_Arrival_Time,(*it1).sche_Msg5_Time,(*it1).UL_Buffer_Size);
 				LOG("Wait until receive ack for Msg4..\n");
 				system("pause");
 		    	continue;
@@ -260,13 +264,21 @@ void NB_schedule_ulsch(uint32_t scheH_SFN,frame_t scheFrame,sub_frame_t scheSubf
 
 		    //Check if UE_is_to_be_scheduled, UL_Buffer_Size only update when receive DV and BSR
 		    //Some UE info like UL_Buffer_Size,.. should be reset after each shcedule round.
-		    if ((*it1).UL_Buffer_Size <= 0 ) {
+            //If schedule Msg3 retransmission-->keep going
+		    if (((*it1).UL_Buffer_Size <= 0)&&((*it1).schedMsg3==false))
+            {
+                LOG("UL_Buffer_Size <= 0 schedMsg3==false\n");
+                LOG("CE_Level:%d,UE_id:%d,schedMsg3:%d,CRC_indication:%d,round:%d,multi_tone:%d,first_Arrival_Time:%d,sche_Msg5_Time:%d,UL_Buffer_Size:%d\n",(*it1).CE_Level,(*it1).UE_id,(*it1).schedMsg3,(*it1).CRC_indication,(*it1).round,(*it1).multi_tone,(*it1).PHR,(*it1).DV,(*it1).UL_Buffer_Size,(*it1).first_Arrival_Time,(*it1).sche_Msg5_Time,(*it1).UL_Buffer_Size);
+                system("pause");
 		    	continue;
 		    }
+            //CSS: schedule Msg3 retransmission
+            // if((*it1).configured==true&&(CSS_Flag==true))   continue;
 
 			//Step 1: DCI resource determination
 			HI_DCI0_request_t DCI_Info={0};
 			bool Find_S=true;//find start time of DCI only once
+            (*it1).schedStatus=false;
 	    	while(cntSearchspace<=T_SearchSpace[CE_Level])
     		{
 	    		uint32_t DCI_S=check_if_DL_subframe(scheH_SFN,scheFrame,scheSubframe,MIB_NB_S,SIB1_NB_S);
@@ -344,15 +356,19 @@ void NB_schedule_ulsch(uint32_t scheH_SFN,frame_t scheFrame,sub_frame_t scheSubf
 			    // cout<<"cnt_default:"<<cnt_default<<"cntSearchspace: "<<cntSearchspace<<endl;
 			    // system("pause");
 			}
-			//Check if DCI hav available reosurce in this pp.
-			if((*it1).schedStatus==false)		continue;
+			//Check if DCI have available reosurce in this pp.
+			if((*it1).schedStatus==false)
+            {
+                LOG("No DCIs available reosurce in this pp...\n");
+                continue;
+            }
 
-			// LOG("DCI_List(1,2....m):\n");
-			// for (list<HI_DCI0_request_t>::iterator DCI_it1=DCI_List.begin(); DCI_it1 != DCI_List.end(); ++DCI_it1)
-			// {
-			// 	LOG("startTime:%d,endTime%d\n",(*DCI_it1).DCI_Format.DCI_UL_PDU.startTime,(*DCI_it1).DCI_Format.DCI_UL_PDU.endTime);
-			// }
-			// system("pause");
+			LOG("DCI_List(1,2....m):\n");
+			for (list<HI_DCI0_request_t>::iterator DCI_it1=DCI_List.begin(); DCI_it1 != DCI_List.end(); ++DCI_it1)
+			{
+				LOG("startTime:%d,endTime%d\n",(*DCI_it1).DCI_Format.DCI_UL_PDU.startTime,(*DCI_it1).DCI_Format.DCI_UL_PDU.endTime);
+			}
+			system("pause");
 
 			//Step 2: Scheduling dealy & subcarrier indication determination
 			// resourceAllocation(SIB2_NB_S,UE_Info_List);//scheduling delay(Idelay)/subcarrier ind(Isc)
@@ -361,7 +377,6 @@ void NB_schedule_ulsch(uint32_t scheH_SFN,frame_t scheFrame,sub_frame_t scheSubf
 			// SIB2_NB_S.start_time[i]
 			// SIB2_NB_S.num_Subcarrier[i]
 			// SIB2_NB_S.subcarrier_Offset[i]
-			// Consider reschedule for Msg3-->(*it1)..schedMsg3=true;
 
 			typename list<HI_DCI0_request_t>::iterator DCI_it1 = DCI_List.end();
 			--DCI_it1;
@@ -378,7 +393,7 @@ void NB_schedule_ulsch(uint32_t scheH_SFN,frame_t scheFrame,sub_frame_t scheSubf
 					{
 						if(check_if_NPRACH(SIB2_NB_S,UL_ChannelTime,Sfreq[j])==1)
 							continue;
-						UL_Channel[j]=UL_ChannelTime;//record startTime of UL transmission
+						UL_Channel[j]=UL_ChannelTime;//record startTime of UL transmission->use for UL_CONFIG_Request
 						ScheDelay=shcedulingdelay[i];
 						// (*DCI_it1).DCI_Format.DCI_UL_PDU.DCIN0.scind=j;
 						Isc=j;
@@ -399,6 +414,7 @@ void NB_schedule_ulsch(uint32_t scheH_SFN,frame_t scheFrame,sub_frame_t scheSubf
 			}
 
 			//Step 3: Mcs & Nru determination
+            // Consider reschedule for Msg3-->(*it1)..schedMsg3=true;
 			//First Round to calculate RU required by each UEs
 			uint32_t mcs=max_mcs[(*it1).multi_tone];//max_mcs[2]={10,12};
 			// uint32_t mapped_mcs[3][8]={{1,5,9,10,3,7,11,12},
@@ -406,31 +422,44 @@ void NB_schedule_ulsch(uint32_t scheH_SFN,frame_t scheFrame,sub_frame_t scheSubf
 			// 							{0,2,6,10,0,4,8,12}};
 			uint32_t mappedMcsIndex=(*it1).PHR+4 * (*it1).multi_tone;
 			// uint32_t mapped_mcs[(*it1).CE_Level][mappedMcsIndex];
-			uint32_t ru_index=0,TBS;
+			uint32_t ru_index=0;
+            int TBS=0;
 			bool max_Iru=false;
 			uint32_t RU_table[8]={1,2,3,4,5,6,8,10};
 			TBS=get_TBS_UL(mcs,(*it1).multi_tone,ru_index,max_Iru);
 			// LOG("mcs:%d,mapped_mcs:%d,TBS:%d\n",mcs,mapped_mcs[(*it1).CE_Level][mappedMcsIndex],TBS);
-			while((mapped_mcs[(*it1).CE_Level][mappedMcsIndex]<mcs)||((TBS>(*it1).UL_Buffer_Size)&&(mcs>=0)))
-			{
-				// LOG("XX");
-				// system("pause");
-				--mcs;
-				TBS=get_TBS_UL(mcs,(*it1).multi_tone,ru_index,max_Iru);
-				// LOG("mcs:%d,TBS:%d\n",mcs,TBS);
-			}
-			while((TBS<(*it1).UL_Buffer_Size)&&(ru_index<=7))
-			{
-				// LOG("YY");
-				// system("pause");
-				ru_index++;
-				TBS=get_TBS_UL(mcs,(*it1).multi_tone,ru_index,max_Iru);
-				if(max_Iru)	break;
-			}
+            if((*it1).schedMsg3)
+            {
+                mcs=2;//Imcs=010;,pi/4 QPSK,Nru=1,TBS=88 bits
+                TBS=88>>3;
+                ru_index=0;
+            }
+            else
+            {
+    			while((mapped_mcs[(*it1).CE_Level][mappedMcsIndex]<mcs)||((TBS>(*it1).UL_Buffer_Size)&&(mcs>=0)))
+    			{
+    				// LOG("XX");
+    				// system("pause");
+    				--mcs;
+    				TBS=get_TBS_UL(mcs,(*it1).multi_tone,ru_index,max_Iru);
+    				// LOG("mcs:%d,TBS:%d\n",mcs,TBS);
+    			}
+    			while((TBS<(*it1).UL_Buffer_Size)&&(ru_index<=7))
+    			{
+    				// LOG("YY");
+    				// system("pause");
+    				ru_index++;
+    				TBS=get_TBS_UL(mcs,(*it1).multi_tone,ru_index,max_Iru);
+    				if(max_Iru)	break;
+    			}
+            }
 			(*it1).allocate_Buffer_Size=TBS;
+
 			//Step 4: Pre UL resource mapping
 			uint32_t Nrep[3]={SIB2_NB_S.rep[0],SIB2_NB_S.rep[1],SIB2_NB_S.rep[2]};
-			uint32_t N=RU_table[ru_index] * Nrep[(*it1).CE_Level] * num_ULslots(Isc);
+            uint32_t Nulslots=num_ULslots(Isc);
+            //1 UL slots=0.5ms
+			uint32_t N=RU_table[ru_index] * Nrep[(*it1).CE_Level] * Nulslots * 0.5;
 			while(N>0)
 			{
 				// LOG("N:%d\n",N);
@@ -450,9 +479,9 @@ void NB_schedule_ulsch(uint32_t scheH_SFN,frame_t scheFrame,sub_frame_t scheSubf
 			N=RU_table[ru_index] * Nrep[(*it1).CE_Level] * num_ULslots(Isc);
 			//Sched UL transmission will end in UL_ChannelTime-->record to (*it1).next_Arrival_Time.
 			(*it1).next_Arrival_Time=UL_ChannelTime;
-			LOG("CE_Level:%d,UE_id:%d,Msg3ArrivalTime:%d,ACKforMsg4Time:%d,DCI_StartTime/EndTime:%d/%d,ScheDelay:%d,N:%d,Sched UL transmission startTime/EndTime:%d/%d\n",(*it1).CE_Level,(*it1).UE_id,(*it1).first_Arrival_Time,(*it1).sche_Msg5_Time,(*DCI_it1).DCI_Format.DCI_UL_PDU.startTime,(*DCI_it1).DCI_Format.DCI_UL_PDU.endTime,ScheDelay,N,UL_Channel[Isc],(*it1).next_Arrival_Time);
+			LOG("CE_Level:%d,UE_id:%d,FirstMsg3ArrivalTime:%d,schedMsg3:%d,ACKforMsg4Time:%d,DCI_StartTime/EndTime:%d/%d,ScheDelay:%d,N:%d,Sched UL transmission startTime/EndTime:%d/%d\n",(*it1).CE_Level,(*it1).UE_id,(*it1).first_Arrival_Time,(*it1).schedMsg3,(*it1).sche_Msg5_Time,(*DCI_it1).DCI_Format.DCI_UL_PDU.startTime,(*DCI_it1).DCI_Format.DCI_UL_PDU.endTime,ScheDelay,N,UL_Channel[Isc],(*it1).next_Arrival_Time);
 			// LOG("\n");
-			LOG("CE_Level:%d,UE_id:%d,CRC_indication:%d,round:%d,multi_tone:%d,PHR:%d,MSC:%d,DV:%d,BSR:%d,UL_Buffer_Size:%d,TBS:%d\n",(*it1).CE_Level,(*it1).UE_id,(*it1).CRC_indication,(*it1).round,(*it1).multi_tone,(*it1).PHR,mcs,(*it1).DV,(*it1).BSR,(*it1).UL_Buffer_Size,TBS);
+			LOG("CE_Level:%d,UE_id:%d,CRC_indication:%d,round:%d,multi_tone:%d,PHR:%d,MSC:%d,DV:%d,BSR:%d,UL_Buffer_Size:%d,TBS:%d,Nru:%d,Nrep:%d,Nulslots:%d\n",(*it1).CE_Level,(*it1).UE_id,(*it1).CRC_indication,(*it1).round,(*it1).multi_tone,(*it1).PHR,mcs,(*it1).DV,(*it1).BSR,(*it1).UL_Buffer_Size,TBS,RU_table[ru_index],Nrep[(*it1).CE_Level],Nulslots);
 			// LOG("\n");
 			// system("pause");
 			// UL_Channel[j] record last time of the Isc
@@ -484,9 +513,9 @@ void NB_schedule_ulsch(uint32_t scheH_SFN,frame_t scheFrame,sub_frame_t scheSubf
 			{
 				(*it1).remaining_Buffer_Sizes=(*it1).UL_Buffer_Size-(*it1).allocate_Buffer_Size;
 				// if((*it1).remaining_Buffer_Sizes<=0), Bug: can't judge nagatove value..
-				if((*it1).allocate_Buffer_Size >= (*it1).UL_Buffer_Size)
+				if(((*it1).allocate_Buffer_Size >= (*it1).UL_Buffer_Size)&&((*it1).schedMsg3==false))
 				{
-					(*it1).UL_Buffer_Size=0;
+					// (*it1).UL_Buffer_Size=0;
 					LOG("[Delete] CE_Level:%d,UE_id:%d,UL_Buffer_Size:%d,TBS:%d,Remainging_UL_Buffer_Size:%d\n",(*it1).CE_Level,(*it1).UE_id,(*it1).UL_Buffer_Size,(*it1).allocate_Buffer_Size,(*it1).remaining_Buffer_Sizes);
 					it1 = UE_Info_List.erase (it1);
 					--it1;
@@ -494,7 +523,7 @@ void NB_schedule_ulsch(uint32_t scheH_SFN,frame_t scheFrame,sub_frame_t scheSubf
 				else
 				{
 					(*it1).UL_Buffer_Size=0;
-					LOG("[Reset] UE_id:%d,UL_Buffer_Size:%d, Remainging_UL_Buffer_Size:%d Update UL_Buffer_Size when receive DV or BSR\n",(*it1).UE_id,(*it1).UL_Buffer_Size,(*it1).remaining_Buffer_Sizes);
+					LOG("[Reset] UE_id:%d,UL_Buffer_Size:%d, Remainging_UL_Buffer_Size:%d, BSRNextArrival:%d Update UL_Buffer_Size when receive DV or BSR\n",(*it1).UE_id,(*it1).UL_Buffer_Size,(*it1).remaining_Buffer_Sizes,(*it1).next_Arrival_Time);
 				}
 			}
 		}

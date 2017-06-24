@@ -33,12 +33,12 @@ typedef struct _UE_TEMPLATE_NB
 	uint8_t BSR;//shortBSR
 	//Scheduled Parameters
 	uint8_t	Priority;// not used for now, Priority base on size of DV/BSR...
-	uint32_t UL_Buffer_Size;
-	uint32_t allocate_Buffer_Size;
+	int UL_Buffer_Size;
+	int allocate_Buffer_Size;
 	uint8_t mcs;//mcs Index
 	uint8_t Qm;
 	int round;
-	uint32_t remaining_Buffer_Sizes;
+	int remaining_Buffer_Sizes;
 	int startFreqPos;//Isc
 	//NPUSCH RU Table
 	int num_tone;
@@ -47,7 +47,7 @@ typedef struct _UE_TEMPLATE_NB
 	int remainging_subframe;
 	//Sche_Ctrl
 	uint32_t first_Arrival_Time;//Msg3 arrival time
-	int32_t sche_Msg5_Time;
+	int sche_Msg5_Time;
 	uint32_t next_Arrival_Time;
 }UE_TEMPLATE_NB;
 
@@ -87,7 +87,7 @@ uint32_t get_DCI_Filed(const uint32_t,uint32_t);
 uint32_t num_ULslots(uint32_t);
 uint32_t get_I_RU(uint32_t);
 uint32_t get_I_TBS(uint32_t,uint32_t);
-uint32_t get_TBS_UL(uint32_t,uint32_t,uint32_t &,bool &);
+int get_TBS_UL(uint32_t,uint32_t,uint32_t &,bool &);
 uint32_t check_if_NPRACH(SIB2_NB &,uint32_t,uint32_t);
 bool compareMyType3 (const UE_TEMPLATE_NB &, const UE_TEMPLATE_NB &);
 uint32_t check_if_DL_subframe(uint32_t,uint32_t,uint32_t,MIB_NB &,SIB1_NB &);

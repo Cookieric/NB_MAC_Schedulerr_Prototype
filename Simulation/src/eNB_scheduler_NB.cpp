@@ -5,6 +5,8 @@
 #include <iostream>
 #include <list>
 #include <vector>
+#include <fstream>
+
 #include "rrc_NB.h"
 #include "sche_pro_NB.h"
 #include "interface_NB.h"
@@ -38,6 +40,7 @@ int num_UL_Subcarrier=48;
 
 
 UL_IND_t UL_Indicaiton;
+Sche_RES_t Sche_Response;
 
 // list<UE_TEMPLATE_NB> UL_UE_Info_List
 
@@ -122,13 +125,22 @@ int main(void)
 	// reserve_schedule_SI(frame,subframes,NPDCCH_period,DL_Channel_bitmap,&MIB_NB_S, &SIB1_NB_S,true);
 	//NPDCCH Period base scheudling for MIB/SIB1/23 and UL;  RA and DL not done.
 	//Start to schedule
+	ofstream resourceUtilization,AverageDelay;
+
+	// resourceUtilization << numUE << "," << utilization/simTimes << endl;
+	// AverageDelay << numUE << "," << utilization/simTimes << endl;
+
+	resourceUtilization.close();
+	AverageDelay.close();
+
 	while(1)
 	{
 		// if(((frame*10+subframes)%NPDCCH_period)==0) n_pp++;
 		Ulsch_ind(frame,subframes,UL_Indicaiton);
+		Sche_res(frame,subframes,Sche_Response);
 		//New architecture delete UL/DL virtual channel structure
 		//Build UL/DL virtual channel structure at the start of previous SF of each pp.
-		// if(((H_SFN * 10240+frame * 10+subframes+1)%NPDCCH_period)==0)
+		// if(((H_SFN * 1024+frame * 10+subframes+1)%NPDCCH_period)==0)
 		// {
 		// 	LOG("H_SFN:%d,frame:%d,subframes:%d,Build next pp(%d~%d)struc for UL/DL at previous SF of each pp\n",H_SFN,frame,subframes,(frame*10+subframes+1),(frame*10+subframes+1+NPDCCH_period));
 		// 	// system("pause");
@@ -149,14 +161,14 @@ int main(void)
 
 		/*Start NB_eNB_dlsch_ulsch_scheduler*/
 		//Schedule MIB base on period.
-		if((H_SFN * 10240+frame * 10+subframes+1)%640==0)
+		if((H_SFN * 1024+frame * 10+subframes+1)%640==0)
 		{
 			// NB_schedule_MIB(frame,subframes,NPDCCH_period,DL_Channel_bitmap,false);//NPBCH
 		}
 		//Schedule SIs(SIB1,SIB23) base on period.
 		for (int i = 0; i < SI_entry; ++i)
 		{
-			if((H_SFN * 10240+frame * 10+subframes+1)%SI_period[i]==0)
+			if((H_SFN * 1024+frame * 10+subframes+1)%SI_period[i]==0)
 			{
 				// NB_schedule_SI(frame,subframes,NPDCCH_period,DL_Channel_bitmap,&MIB_NB_S, &SIB1_NB_S,false);
 			}
@@ -164,7 +176,7 @@ int main(void)
 		//Schedule RA/UL/DL at the previous SF of each pp for three CE levels.
 		for (int i = 0; i < 3; ++i)
 		{
-			if(((H_SFN * 10240+frame * 10+subframes+1)%NPDCCH_period[i])==0)
+			if(((H_SFN * 1024+frame * 10+subframes+1)%NPDCCH_period[i])==0)
 			{
 				uint32_t scheH_SFN=0,scheSubframe=0,scheFrame=0;
 				scheH_SFN=H_SFN;
@@ -190,7 +202,7 @@ int main(void)
 		/*End NB_eNB_dlsch_ulsch_scheduler*/
 
 		//New architecture delete UL/DL virtual channel structure
-		// if(((H_SFN * 10240+frame * 10+subframes+2)%NPDCCH_period)==0)//The end of previous tow SF of each pp.
+		// if(((H_SFN * 1024+frame * 10+subframes+2)%NPDCCH_period)==0)//The end of previous tow SF of each pp.
 		// {
 		// 	free(UL_Channel_bitmap[0]);
 		// 	free(UL_Channel_bitmap);

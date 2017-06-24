@@ -25,7 +25,7 @@ typedef struct Sche_RES
 	//preamble_List
 }Sche_RES_t;
 
-
+uint32_t Sche_res(frame_t,sub_frame_t,Sche_RES_t &);
 uint32_t Ulsch_ind(frame_t,sub_frame_t,UL_IND_t &);
 
 

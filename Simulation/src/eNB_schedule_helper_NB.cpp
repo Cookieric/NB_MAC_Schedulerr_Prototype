@@ -132,9 +132,9 @@ uint32_t get_I_TBS(uint32_t mcs,uint32_t multi_tone)
 }
 
 // uint32_t RU_table[8]={1,2,3,4,5,6,8,10};
-uint32_t get_TBS_UL(uint32_t mcs,uint32_t multi_tone,uint32_t & Iru,bool & maxIru)
+int get_TBS_UL(uint32_t mcs,uint32_t multi_tone,uint32_t & Iru,bool & maxIru)
 {
-	uint32_t TBS;
+	int TBS;
 	uint32_t I_TBS=get_I_TBS(mcs,multi_tone);
 	TBS=UL_TBS_Table[I_TBS][Iru];
 	if((TBS==0)||(Iru>7))
@@ -157,9 +157,9 @@ uint32_t check_if_NPRACH(SIB2_NB & SIB2_NB_S,uint32_t UL_ChannelTime,uint32_t Fr
 	// UL_ChannelTime,9,19,129,10251....
 	// FreqPosition belong to {0,4,8,12,16,20,24,28,32,36,40,44}
 	// uint32_t scheH_SFN,scheFrame,scheSubframe;
-	// scheH_SFN=UL_ChannelTime/10240;
-	// scheFrame=(UL_ChannelTime-scheH_SFN * 10240)/10;//1
-	// scheSubframe=UL_ChannelTime-scheH_SFN * 10240-scheFrame * 10;
+	// scheH_SFN=UL_ChannelTime/1024;
+	// scheFrame=(UL_ChannelTime-scheH_SFN * 1024)/10;//1
+	// scheSubframe=UL_ChannelTime-scheH_SFN * 1024-scheFrame * 10;
 	for (int i = 0; i < 3; ++i)//Three CE level
 	{
 		uint32_t Trange = UL_ChannelTime%SIB2_NB_S.period[i];
@@ -200,7 +200,7 @@ uint32_t check_if_DL_subframe(uint32_t Sche_H_SFN,uint32_t scheFrame,uint32_t sc
     uint32_t TBS_Index=MIB_NB_S.schedulingInfoSIB1;
     uint32_t TBS_SIB1=getTBS_SIB1(TBS_Index);
     uint32_t repetitionOffset=sib1_Period/repetitionNum_SIB1;//64
-	uint32_t T=Sche_H_SFN * 10240+scheFrame * 10+scheSubframe;
+	uint32_t T=Sche_H_SFN * 1024+scheFrame * 10+scheSubframe;
 	uint32_t SIB1_T=T%repetitionOffset;//144 mod 64=16
     if((0<=SIB1_T)&&(SIB1_T<=16))   shcedSIB1=true;//0~15
     else	shcedSIB1=false;
@@ -418,8 +418,8 @@ uint8_t DCIs_resource_determinaiton(uint32_t scheH_SFN,uint32_t scheFrame,uint32
 	// 						DCI_List.push_back  (DCI_Info);
  //                            typename list<HI_DCI0_request_t>::iterator DCI_it1 = DCI_List.end();
  //                            --DCI_it1;
-	// 						//Actual timing: Sche_H_SFN * 10240+scheFrame * 10+scheSubframe
-	// 						(*DCI_it1).DCI_Format.DCI_UL_PDU.startTime=Sche_H_SFN * 10240+scheFrame * 10+scheSubframe;
+	// 						//Actual timing: Sche_H_SFN * 1024+scheFrame * 10+scheSubframe
+	// 						(*DCI_it1).DCI_Format.DCI_UL_PDU.startTime=Sche_H_SFN * 1024+scheFrame * 10+scheSubframe;
 	// 						for (int j = i; j < NPDCCH_period; ++j)
 	// 						{
 	// 							if(DL_Channel_bitmap[j]==NA)
@@ -430,7 +430,7 @@ uint8_t DCIs_resource_determinaiton(uint32_t scheH_SFN,uint32_t scheFrame,uint32
 	// 							}
 	// 							if((*DCI_it1).DCI_Format.DCI_UL_PDU.cntR==R[0])
 	// 							{
-	// 								//Actual timing: Sche_H_SFN * 10240+scheFrame * 10+scheSubframe
+	// 								//Actual timing: Sche_H_SFN * 1024+scheFrame * 10+scheSubframe
 	// 								(*DCI_it1).DCI_Format.DCI_UL_PDU.endTime=j;// j used by following Idelay/Isc caculaiton
 	// 								DCI_set=true;
 	// 								break;
@@ -530,12 +530,9 @@ uint8_t get_BSR_index(uint32_t remaining_Buffer_Sizes)
 {
 	for (int i = 0; i < sizeof(BSR_table)/sizeof(uint32_t); ++i)
 	{
-		if((remaining_Buffer_Sizes<=BSR_table[i]) && (remaining_Buffer_Sizes>=0))	return	i;
-		else
+		if((remaining_Buffer_Sizes<=BSR_table[i]) && (remaining_Buffer_Sizes>=0))
 		{
-			LOG("Abnormal remaining_Buffer_Sizes in get_BSR_index()\n");
-			system("pause");
-			exit(1);
+			return	i;
 		}
 	}
 	return 63;
@@ -549,18 +546,43 @@ uint8_t get_CRC_indication()
 	else	return 1;//decode UL transmission fail
 }
 uint32_t totalNumUE=0;
+uint32_t simPoint=0;// for record different total nummber of UE
+
+uint32_t Sche_res(frame_t frame,sub_frame_t subframes,Sche_RES_t & Sche_Response)
+{
+	uint32_t DCI_Send=H_SFN * 1024+frame * 10+subframes;
+	list<HI_DCI0_request_t> & DCI_List=Sche_Response.DCI_L;
+	typename list<HI_DCI0_request_t>::iterator DCI_it1 = DCI_List.begin();
+	if((DCI_Send==(*DCI_it1).DCI_Format.DCI_UL_PDU.startTime)&&(DCI_Send!=0))
+	{
+		LOG("H_SFN:%d,frame:%d,subframes:%d,Send DCI(DCI startTime/EndTime:%d/%d) to PHY from DCI_List\n",H_SFN,frame,subframes,(*DCI_it1).DCI_Format.DCI_UL_PDU.startTime,(*DCI_it1).DCI_Format.DCI_UL_PDU.endTime);
+		DCI_List.pop_front ();
+		system("pause");
+	}
+}
 
 uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 {
     // list<UE_TEMPLATE_NB> & UE_Info_List=UL_Indicaiton.UL_UE_Info_List[0];
     // list<UE_TEMPLATE_NB> & UE_Info_List=UL_Indicaiton.UL_UE_Info_List[CE_Level]
     typename list<UE_TEMPLATE_NB>::iterator it1;
-    if(((H_SFN * 10240+frame * 10+subframes)%1000)==0)//New UE's Msg3 arrive with fixed Inter aiival time
+    if(((H_SFN * 1024+frame * 10+subframes)%1000)==0)//New UE's Msg3 arrive with fixed Inter aiival time
     {
     	LOG("New UEs' Msg3 arrive at frame:%d,subframes:%d\n",frame,subframes);
     	static int UE_id=0;
     	int new_num_UE=6;
     	totalNumUE=totalNumUE+new_num_UE;
+    	// if(totalNumUE==6)	simCase=0;
+    	// else if(totalNumUE==12)	simCase=1;
+    	// else if(totalNumUE==18)	simCase=2;
+    	// else if(totalNumUE==24)	simCase=3;
+    	// else if(totalNumUE==30)	simCase=4;
+    	// else if(totalNumUE==36)	simCase=4;
+    	// else if(totalNumUE==42)	simCase=4;
+    	// else if(totalNumUE==48)	simCase=4;
+    	// else if(totalNumUE==54)	simCase=4;
+    	// else if(totalNumUE==60)	simCase=4;
+    	// ++simPoint;
     	// int *ptr = &var;//avoid copy constructor action
     	// int &ptr = var;//avoid copy constructor action
     	// list<UE_TEMPLATE_NB> & UE_Info_List=UL_Indicaiton.UL_UE_Info_List;
@@ -573,8 +595,8 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
     		UL_UE_Info.CRC_indication=get_CRC_indication();
     		UL_UE_Info.round=1;
     		UL_UE_Info.oldNDI_UL=0;
-    		// UL_UE_Info.CE_Level=get_CE_level();
-    		UL_UE_Info.CE_Level=0;
+    		UL_UE_Info.CE_Level=get_CE_level();
+    		// UL_UE_Info.CE_Level=0;
     		UL_UE_Info.ul_active=true;
     		UL_UE_Info.configured=false;
     		UL_UE_Info.schedMsg3=false;
@@ -587,7 +609,7 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
     		UL_UE_Info.PHR=-1;
     		UL_UE_Info.DV=-1;
     		UL_UE_Info.UL_Buffer_Size=-1;
-    		UL_UE_Info.first_Arrival_Time=H_SFN*10240+frame*10+subframes;
+    		UL_UE_Info.first_Arrival_Time=H_SFN*1024+frame*10+subframes;
     		UL_UE_Info.next_Arrival_Time=-1;
     		UL_UE_Info.allocate_Buffer_Size=1;
     		UL_UE_Info.mcs=-1;
@@ -633,11 +655,11 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 		// LOG("UL_UE_Info_List[%d].size:%d\n",i,UE_Info_List.size());
     	for (it1=UE_Info_List.begin(); it1!=UE_Info_List.end();++it1)
     	{
-	        if(H_SFN * 10240+frame * 10+subframes==(*it1).sche_Msg5_Time)
+	        if(H_SFN * 1024+frame * 10+subframes==(*it1).sche_Msg5_Time)
 	        {
 	            (*it1).configured=true;//Receive ACK for Msg4, Ready to schedule DCI N0 for Msg5 at next pp
 	        }
-	    	if((H_SFN * 10240+frame * 10+subframes)==(*it1).next_Arrival_Time)//next_Arrival_Time=ULtransmissionendTime
+	    	if((H_SFN * 1024+frame * 10+subframes)==(*it1).next_Arrival_Time)//next_Arrival_Time=ULtransmissionendTime
 	    	{
 	    		// UE_TEMPLATE_NB UL_UE_Info;
 	    		// list<UE_TEMPLATE_NB> % UE_Info_List = UL_Indicaiton.UL_UE_Info_List;
@@ -653,7 +675,8 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 	                }
 	                else
 	                {
-		                (*it1).sche_Msg5_Time=(*it1).next_Arrival_Time+NPDCCH_period[i];
+	                	(*it1).schedMsg3=false;//disable Msg3 flag
+		                (*it1).sche_Msg5_Time=(*it1).next_Arrival_Time+8 * 4+8 * 4 *(*it1).CE_Level+64;
 		        		(*it1).PHR=PHR_table[(*it1).CE_Level][(*it1).multi_tone];
 						(*it1).DV=get_DV_index();
 						(*it1).UL_Buffer_Size=DV_table[(*it1).DV];
@@ -670,9 +693,9 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 	                    (*it1).round++;
 	                }
 	            }
+	    		LOG("CE_Level:%d,UE_id:%d,CRC_indication:%d,round:%d,multi_tone:%d,PHR:%d,DV:%d,BSR:%d,UL_Buffer_Size:%d,first_Arrival_Time:%d,sche_Msg5_Time:%d\n",(*it1).CE_Level,(*it1).UE_id,(*it1).CRC_indication,(*it1).round,(*it1).multi_tone,(*it1).PHR,(*it1).DV,(*it1).BSR,(*it1).UL_Buffer_Size,(*it1).first_Arrival_Time,(*it1).sche_Msg5_Time);
+				system("pause");
 	        }
-    		// LOG("CE_Level:%d,UE_id:%d,CRC_indication:%d,round:%d,multi_tone:%d,PHR:%d,DV:%d,UL_Buffer_Size:%d,first_Arrival_Time:%d,sche_Msg5_Time:%d\n",(*it1).CE_Level,(*it1).UE_id,(*it1).CRC_indication,(*it1).round,(*it1).multi_tone,(*it1).PHR,(*it1).DV,(*it1).UL_Buffer_Size,(*it1).first_Arrival_Time,(*it1).sche_Msg5_Time);
-			// system("pause");
 	    }
     }
 }

@@ -67,6 +67,8 @@ list
 -
 vector
 -
+fstream
+-
 rrc_NB.h
 C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/rrc_NB.h
 sche_pro_NB.h
