@@ -349,6 +349,8 @@ void NB_schedule_ulsch(uint32_t scheH_SFN,frame_t scheFrame,sub_frame_t scheSubf
 						{
 							for (int j=0;j<locationS[CE_Level].size(); j++)//locationS: 3X8 array
 							{
+                                //If Rmax/R is the same for CSS/USS in the same CE level, locationS keep the same
+                                //If Rmax/R is different for CSS/USS in the same CE level, locationS will changed...
 								if(locationS[CE_Level][j]==cntSearchspace)
 								{
 						  			DCI_Info.DCI_Format.DCI_UL_PDU.startTime=DCI_S;

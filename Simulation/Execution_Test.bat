@@ -15,7 +15,7 @@ REM Ouput a /home/usr/code/log.txt
 REM The path is related to excuted index path...
 @echo off
 
-start /D"C:\Users\bmw\Desktop\Thesis_Being\NB_MAC_Scheduler_Prototype\Simulation\build\" Simulation.exe 5
+start /D"C:\Users\bmw\Desktop\Thesis_Being\NB_MAC_Scheduler_Prototype\Simulation\build\" Simulation.exe 6
 
 REM start /D"C:\Users\bmw\Desktop\Thesis_Being\NB_MAC_Scheduler_Prototype\Simulation\build\" Simulation.exe 1
 
