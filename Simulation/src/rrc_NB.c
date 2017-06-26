@@ -94,7 +94,7 @@ void Initial_UE_Specific_Config(RRCCoonectionSetup_NB * Msg4_S,SIB2_NB * SIB2_NB
 	Msg4_S->UE_specificConfig.npdcch_StartSF_USS[2]=SIB2_NB_S->npdcch_StartSF_CSS_RA[2];
 	Msg4_S->UE_specificConfig.npdcch_Offset_USS[2]=SIB2_NB_S->npdcch_Offset_RA[2];
 	//BSR
-	Msg4_S->bsrConfig.PeriodicBSR_Timer_NB=8;// 8 pp as default value in 36.331 spec.
+	Msg4_S->bsrConfig.PeriodicBSR_Timer_NB=2;// 2pp is smallest value, 8 pp is default value in 36.331 spec.
 	Msg4_S->bsrConfig.RetxBSR_Timer_NB=-1;//disable the timer in NB-IoT
 }
 

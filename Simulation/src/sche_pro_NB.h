@@ -38,7 +38,7 @@ typedef struct _UE_TEMPLATE_NB
 	uint8_t mcs;//mcs Index
 	uint8_t Qm;
 	int round;
-	int remaining_Buffer_Sizes;
+	// int remaining_Buffer_Sizes;
 	int startFreqPos;//Isc
 	//NPUSCH RU Table
 	int num_tone;
@@ -49,6 +49,7 @@ typedef struct _UE_TEMPLATE_NB
 	uint32_t first_Arrival_Time;//Msg3 arrival time
 	int sche_Msg5_Time;
 	uint32_t next_Arrival_Time;
+	int payloadSize;//Used for virtual UE
 }UE_TEMPLATE_NB;
 
 typedef struct _Pattern_base {
