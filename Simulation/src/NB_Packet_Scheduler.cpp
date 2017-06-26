@@ -337,9 +337,9 @@ int main(int argc, char const *argv[])
 	int delta=3;//3 for 0.66, 10 for 0.1, other value for 0.9 single-tone ratio
 	ofstream oneThird_singleTone,oneTen_singleTone,nineTen_singleTone;
 
-	if(delta==3)	oneThird_singleTone.open("Matlab_Result\\oneThird_singleTone.csv", ios::out);
-	else if(delta==10)	oneTen_singleTone.open("Matlab_Result\\oneTen_singleTone.csv", ios::out);
-	else	nineTen_singleTone.open("Matlab_Result\\nineTen_singleTone.csv", ios::out);
+	if(delta==3)	oneThird_singleTone.open("Matlab_Result_Test\\oneThird_singleTone.csv", ios::out);
+	else if(delta==10)	oneTen_singleTone.open("Matlab_Result_Test\\oneTen_singleTone.csv", ios::out);
+	else	nineTen_singleTone.open("Matlab_Result_Test\\nineTen_singleTone.csv", ios::out);
 
 	bool singleMost=false;
 	int simTimes=1;
