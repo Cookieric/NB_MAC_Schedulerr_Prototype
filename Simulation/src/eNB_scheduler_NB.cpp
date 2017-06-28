@@ -62,7 +62,7 @@ uint8_t CSS_flag=0;
 //Evaluation Performance
 double T_AvailResource[10]={0};
 double T_OccupiedResource[10]={0};
-int T_Average_Delay[10]={0};
+int T_Average_Delay[3][10]={0};
 
 int End_Time=0;
 uint8_t TotalNumUE[10]={12,18,24,30,36,42,48,54,60,66};
@@ -70,30 +70,45 @@ uint8_t TotalNumUE[10]={12,18,24,30,36,42,48,54,60,66};
 uint8_t TotalNumUE_H[10]={24,48,72,96,120,144,168,192,216,240};
 bool simCtrl=true;
 uint8_t runCase;//0,1,2,3,4,5,6,7,8
-extern int Sum_Delay;
+// extern int Sum_Delay;
+extern int Sum_Delay[3];
+int CEi_NumUE[3]={0,0,0};
 extern int EndPoint;
 extern uint32_t totalNumUE;
 int Sum_nprach_resource_U=0;
 extern int Sum_Occupied_resource__U;
 
-
-//0: pp are different for 3 CE levels
+//Parameters should be initilize before each simulation time...
+extern int UE_id;
+int simTimes=0;
 //1: pp are same for 3 CE levels
-//2: CSS/USS are the same
-//3: CSS/USS are different(alpha offset is changed..)
+//2: pp are different for 3 CE levels
+//3: CSS/USS are the same
+//4: CSS/USS are different(alpha offset is changed..)
 # define simCase 1
 //0:low offered load-->6.. report/sec
 //1:high offered load-->12 or 18.. report/sec
-uint8_t highOfferedLoad=1;
+uint8_t highOfferedLoad=0;
 // # define highOfferedLoad 0
-/*Case1,2*/
-ofstream resourceUtilization_pp_same,AverageDelay_pp_same,resourceUtilization_pp_same_H,AverageDelay_pp_same_H;
-ofstream resourceUtilization_pp_not_same,AverageDelay_pp_not_same,resourceUtilization_pp_not_same_H,AverageDelay_pp_not_same_H;
+//Case 1
+ofstream resourceUtilization_pp_same,resourceUtilization_pp_same_H;
+ofstream AverageDelay_pp_sameCE0,AverageDelay_pp_sameCE1,AverageDelay_pp_sameCE2;
+ofstream AverageDelay_pp_sameCE0_H,AverageDelay_pp_sameCE1_H,AverageDelay_pp_sameCE2_H;
+//Case 2
+ofstream resourceUtilization_pp_not_same,resourceUtilization_pp_not_same_H;
+ofstream AverageDelay_pp_not_sameCE0,AverageDelay_pp_not_sameCE1,AverageDelay_pp_not_sameCE2;
+ofstream AverageDelay_pp_not_sameCE0_H,AverageDelay_pp_not_sameCE1_H,AverageDelay_pp_not_sameCE2_H;
 
-/*Case3,4*/
-ofstream resourceUtilization_pp_same1,AverageDelay_pp_same1,resourceUtilization_pp_same_H1,AverageDelay_pp_same_H1;
-ofstream resourceUtilization_pp_not_same2,AverageDelay_pp_not_same2,resourceUtilization_pp_not_same_H2,AverageDelay_pp_not_same_H2
-;
+//Case 3
+ofstream resourceUtilization_pp_same1,resourceUtilization_pp_same_H1;
+ofstream AverageDelay_pp_sameCE0_1,AverageDelay_pp_sameCE1_1,AverageDelay_pp_sameCE2_1;
+ofstream AverageDelay_pp_sameCE0_H1,AverageDelay_pp_sameCE1_H1,AverageDelay_pp_sameCE2_H1;
+//Case 4
+ofstream resourceUtilization_pp_not_same1,resourceUtilization_pp_not_same_H1;
+ofstream AverageDelay_pp_not_sameCE0_1,AverageDelay_pp_not_sameCE1_1,AverageDelay_pp_not_sameCE2_1;
+ofstream AverageDelay_pp_not_sameCE0_H1,AverageDelay_pp_not_sameCE1_H1,AverageDelay_pp_not_sameCE2_H1;
+
+
 int main(int argc, char const *argv[])//design simulation base on different argv/argc form bat...
 {
 	srand(time(NULL));
@@ -113,30 +128,48 @@ int main(int argc, char const *argv[])//design simulation base on different argv
 	system("pause");
 
 	// oneThird_singleTone.open("Matlab_Result\\oneThird_singleTone.csv", ios::out);
-	if(simCase)
+	if(simCase==1)
 	{
-		if(highOfferedLoad!=1)
+		if(highOfferedLoad==0)
 		{
-			AverageDelay_pp_same.open("Matlab_Result\\AverageDelay_pp_same.csv", ios::app);
-			resourceUtilization_pp_same.open("Matlab_Result\\resourceUtilization_pp_same.csv", ios::app);
+			// AverageDelay_pp_same.open("Matlab_Result\\AverageDelay_pp_same.csv", ios::app);
+			// resourceUtilization_pp_same.open("Matlab_Result\\resourceUtilization_pp_same.csv", ios::app);
+
+			resourceUtilization_pp_same.open("Matlab_Result\\resourceUtilization_pp_same.csv", ios::app);;
+			AverageDelay_pp_sameCE0.open("Matlab_Result\\AverageDelay_pp_sameCE0.csv", ios::app);;
+			AverageDelay_pp_sameCE1.open("Matlab_Result\\AverageDelay_pp_sameCE1.csv", ios::app);;
+			AverageDelay_pp_sameCE2.open("Matlab_Result\\AverageDelay_pp_sameCE2.csv", ios::app);;
+			// resourceUtilization_pp_same_H.open("Matlab_Result\\resourceUtilization_pp_same_H.csv", ios::app);;
+			// AverageDelay_pp_sameCE0_H.open("Matlab_Result\\AverageDelay_pp_sameCE0_H.csv", ios::app);;
+			// AverageDelay_pp_sameCE1_H.open("Matlab_Result\\AverageDelay_pp_sameCE1_H.csv", ios::app);;
+			// AverageDelay_pp_sameCE2_H.open("Matlab_Result\\AverageDelay_pp_sameCE2_H.csv", ios::app);;
 		}
-		else
+		else if(highOfferedLoad==1)
 		{
-			AverageDelay_pp_same_H.open("Matlab_Result\\AverageDelay_pp_same_H.csv", ios::app);
-			resourceUtilization_pp_same_H.open("Matlab_Result\\resourceUtilization_pp_same_H.csv", ios::app);
+			// AverageDelay_pp_same_H.open("Matlab_Result\\AverageDelay_pp_same_H.csv", ios::app);
+			// resourceUtilization_pp_same_H.open("Matlab_Result\\resourceUtilization_pp_same_H.csv", ios::app);
 		}
 	}
-	else
+	else if(simCase==2)
 	{
-		if(highOfferedLoad!=1)
+		if(highOfferedLoad==0)
 		{
-			AverageDelay_pp_not_same.open("Matlab_Result\\AverageDelay_pp_not_same.csv", ios::app);
-			resourceUtilization_pp_not_same.open("Matlab_Result\\resourceUtilization_pp_not_same.csv", ios::app);
+			// AverageDelay_pp_not_same.open("Matlab_Result\\AverageDelay_pp_not_same.csv", ios::app);
+			// resourceUtilization_pp_not_same.open("Matlab_Result\\resourceUtilization_pp_not_same.csv", ios::app);
+
+			resourceUtilization_pp_not_same.open("Matlab_Result\\resourceUtilization_pp_not_same.csv", ios::app);;
+			AverageDelay_pp_not_sameCE0.open("Matlab_Result\\AverageDelay_pp_not_sameCE0.csv", ios::app);;
+			AverageDelay_pp_not_sameCE1.open("Matlab_Result\\AverageDelay_pp_not_sameCE1.csv", ios::app);;
+			AverageDelay_pp_not_sameCE2.open("Matlab_Result\\AverageDelay_pp_not_sameCE2.csv", ios::app);;
+			// resourceUtilization_pp_not_same_H.open("Matlab_Result\\AverageDelay_pp_not_same.csv", ios::app);;
+			// AverageDelay_pp_not_sameCE0_H.open("Matlab_Result\\AverageDelay_pp_not_same.csv", ios::app);;
+			// AverageDelay_pp_not_sameCE1_H.open("Matlab_Result\\AverageDelay_pp_not_same.csv", ios::app);;
+			// AverageDelay_pp_not_sameCE2_H.open("Matlab_Result\\AverageDelay_pp_not_same.csv", ios::app);;
 		}
-		else
+		else if(highOfferedLoad==1)
 		{
-			AverageDelay_pp_not_same_H.open("Matlab_Result\\AverageDelay_pp_not_same_H.csv", ios::app);
-			resourceUtilization_pp_not_same_H.open("Matlab_Result\\resourceUtilization_pp_not_same_H.csv", ios::app);
+			// AverageDelay_pp_not_same_H.open("Matlab_Result\\AverageDelay_pp_not_same_H.csv", ios::app);
+			// resourceUtilization_pp_not_same_H.open("Matlab_Result\\resourceUtilization_pp_not_same_H.csv", ios::app);
 		}
 	}
 
@@ -179,7 +212,7 @@ int main(int argc, char const *argv[])//design simulation base on different argv
 		LOG("%d " ,Sfreq[i]);
 	}
 	LOG("\n");
-	// system("pause");
+	system("pause");
 
 
 	uint32_t SI_period[SI_entry]={2560,SIB1_NB_S.si_Periodicity};
@@ -267,7 +300,7 @@ int main(int argc, char const *argv[])//design simulation base on different argv
 					}
 				}
 				LOG("H_SFN:%d,frame:%d,subframes:%d,Schedule DCIs in CSS of next pp(%d~%d) for UL/DL at previous SF of CE %d pp\n",H_SFN,frame,subframes,(frame*10+subframes+1),(frame*10+subframes+1+CSS_NPDCCH_period[i]),i);
-				// system("pause");
+				system("pause");
 				CSS_flag=1;
 				// NB_schedule_RA(frame,subframes,DL_Channel_bitmap,UL_Channel_bitmap);
 				NB_schedule_ulsch(scheH_SFN,scheFrame,scheSubframe,i,MIB_NB_S,SIB1_NB_S,SIB2_NB_S,Msg4_S,UL_Indicaiton,CSS_flag);
@@ -293,7 +326,7 @@ int main(int argc, char const *argv[])//design simulation base on different argv
 					}
 				}
 				LOG("H_SFN:%d,frame:%d,subframes:%d,Schedule DCIs in USS of next pp(%d~%d) for UL/DL at previous SF of CE %d pp\n",H_SFN,frame,subframes,(frame*10+subframes+1),(frame*10+subframes+1+USS_NPDCCH_period[i]),i);
-				// system("pause");
+				system("pause");
 				CSS_flag=0;
 				// NB_schedule_RA(frame,subframes,DL_Channel_bitmap,UL_Channel_bitmap);
 				NB_schedule_ulsch(scheH_SFN,scheFrame,scheSubframe,i,MIB_NB_S,SIB1_NB_S,SIB2_NB_S,Msg4_S,UL_Indicaiton,CSS_flag);
@@ -343,43 +376,69 @@ int main(int argc, char const *argv[])//design simulation base on different argv
 		}
 		// system("pause");
 	}
-    T_Average_Delay[runCase]=Sum_Delay/totalNumUE;
+	system("pause");
+    T_Average_Delay[0][runCase]=Sum_Delay[0]/CEi_NumUE[0];
+    T_Average_Delay[1][runCase]=Sum_Delay[1]/CEi_NumUE[1];
+    T_Average_Delay[2][runCase]=Sum_Delay[2]/CEi_NumUE[2];
     T_AvailResource[runCase]=(double)((End_Time * 12) - Sum_nprach_resource_U);
 	T_OccupiedResource[runCase]=(double)(Sum_Occupied_resource__U);
-    LOG("End_Time:%d,Total NUmber of UE:%d,T_Average_Delay:%d,T_AvailResource[runCase]:%lf,T_OccupiedResource[runCase]:%lf\n",End_Time,totalNumUE,T_Average_Delay[runCase],T_AvailResource[runCase],T_OccupiedResource[runCase]);
+    LOG("End_Time:%d,Total NUmber of UE:%d,T_Average_DelayCE0:%d,T_Average_DelayCE1:%d,T_Average_DelayCE2:%d,T_AvailResource[runCase]:%lf,T_OccupiedResource[runCase]:%lf\n",End_Time,totalNumUE,T_Average_Delay[0][runCase],T_Average_Delay[1][runCase],T_Average_Delay[2][runCase],T_AvailResource[runCase],T_OccupiedResource[runCase]);
     // system("pause");
-	if(simCase)
+	if(simCase==1)
 	{
-		if(highOfferedLoad!=1)
+		if(highOfferedLoad==0)
 		{
-		    AverageDelay_pp_same<<totalNumUE<<","<<T_Average_Delay[runCase]<<endl;
+		 //    AverageDelay_pp_same<<totalNumUE<<","<<T_Average_Delay[runCase]<<endl;
+		 //    resourceUtilization_pp_same<<totalNumUE<<","<<T_OccupiedResource[runCase]/T_AvailResource[runCase]<<endl;
+			// resourceUtilization_pp_same.close();
+			// AverageDelay_pp_same.close();
+
 		    resourceUtilization_pp_same<<totalNumUE<<","<<T_OccupiedResource[runCase]/T_AvailResource[runCase]<<endl;
 			resourceUtilization_pp_same.close();
-			AverageDelay_pp_same.close();
+
+			AverageDelay_pp_sameCE0<<totalNumUE<<","<<T_Average_Delay[0][runCase]<<endl;
+			AverageDelay_pp_sameCE1<<totalNumUE<<","<<T_Average_Delay[1][runCase]<<endl;
+			AverageDelay_pp_sameCE2<<totalNumUE<<","<<T_Average_Delay[2][runCase]<<endl;
+			AverageDelay_pp_sameCE0.close();
+			AverageDelay_pp_sameCE1.close();
+			AverageDelay_pp_sameCE2.close();
+			// resourceUtilization_pp_same_H.close();
+			// AverageDelay_pp_sameCE0_H.close();
+			// AverageDelay_pp_sameCE1_H.close();
+			// AverageDelay_pp_sameCE2_H.close();
 		}
-		else
+		else if(highOfferedLoad==1)
 		{
-		    AverageDelay_pp_same_H<<totalNumUE<<","<<T_Average_Delay[runCase]<<endl;
-		    resourceUtilization_pp_same_H<<totalNumUE<<","<<T_OccupiedResource[runCase]/T_AvailResource[runCase]<<endl;
-			resourceUtilization_pp_same_H.close();
-			AverageDelay_pp_same_H.close();
+		 //    AverageDelay_pp_same_H<<totalNumUE<<","<<T_Average_Delay[runCase]<<endl;
+		 //    resourceUtilization_pp_same_H<<totalNumUE<<","<<T_OccupiedResource[runCase]/T_AvailResource[runCase]<<endl;
+			// resourceUtilization_pp_same_H.close();
+			// AverageDelay_pp_same_H.close();
 		}
 	}
-	else
+	else if(simCase==2)
 	{
-		if(highOfferedLoad!=1)
+		if(highOfferedLoad==0)
 		{
-		    AverageDelay_pp_not_same_H<<totalNumUE<<","<<T_Average_Delay[runCase]<<endl;
-		    resourceUtilization_pp_not_same_H<<totalNumUE<<","<<T_OccupiedResource[runCase]/T_AvailResource[runCase]<<endl;
-			resourceUtilization_pp_not_same_H.close();
-			AverageDelay_pp_not_same_H.close();
-		}
-		else
-		{
-		    AverageDelay_pp_not_same<<totalNumUE<<","<<T_Average_Delay[runCase]<<endl;
+		 //    AverageDelay_pp_not_same_H<<totalNumUE<<","<<T_Average_Delay[runCase]<<endl;
+		 //    resourceUtilization_pp_not_same_H<<totalNumUE<<","<<T_OccupiedResource[runCase]/T_AvailResource[runCase]<<endl;
+			// resourceUtilization_pp_not_same_H.close();
+			// AverageDelay_pp_not_same_H.close();
 		    resourceUtilization_pp_not_same<<totalNumUE<<","<<T_OccupiedResource[runCase]/T_AvailResource[runCase]<<endl;
 			resourceUtilization_pp_not_same.close();
-			AverageDelay_pp_not_same.close();
+
+			AverageDelay_pp_not_sameCE0<<totalNumUE<<","<<T_Average_Delay[0][runCase]<<endl;
+			AverageDelay_pp_not_sameCE1<<totalNumUE<<","<<T_Average_Delay[1][runCase]<<endl;
+			AverageDelay_pp_not_sameCE2<<totalNumUE<<","<<T_Average_Delay[2][runCase]<<endl;
+			AverageDelay_pp_not_sameCE0.close();
+			AverageDelay_pp_not_sameCE1.close();
+			AverageDelay_pp_not_sameCE2.close();;
+		}
+		else if(highOfferedLoad==1)
+		{
+		 //    AverageDelay_pp_not_same<<totalNumUE<<","<<T_Average_Delay[runCase]<<endl;
+		 //    resourceUtilization_pp_not_same<<totalNumUE<<","<<T_OccupiedResource[runCase]/T_AvailResource[runCase]<<endl;
+			// resourceUtilization_pp_not_same.close();
+			// AverageDelay_pp_not_same.close();
 		}
 	}
 	system("pause");

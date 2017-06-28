@@ -83,7 +83,9 @@ void NB_schedule_RA(frame_t,sub_frame_t,uint32_t *,uint32_t **);
 void NB_schedule_ulsch(uint32_t,frame_t,sub_frame_t,uint32_t,MIB_NB &,SIB1_NB &,SIB2_NB &,RRCCoonectionSetup_NB &,UL_IND_t &,uint8_t &);
 void NB_schedule_dlsch(frame_t,sub_frame_t,uint32_t *);
 
-
+bool compareMyType5 (const HI_DCI0_request_t &, const HI_DCI0_request_t &);
+bool compareMyType4 (const HI_DCI0_request_t &, const HI_DCI0_request_t &);
+uint8_t get_aggregation(uint32_t,uint32_t,uint32_t);
 int get_nprah_resource(int,SIB2_NB &);
 uint32_t get_DCI_Filed(const uint32_t,uint32_t);
 uint32_t num_ULslots(uint32_t);

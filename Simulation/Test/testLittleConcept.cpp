@@ -42,6 +42,23 @@ double pareto_dist(double scale, double shape)
 int main(int argc, char const *argv[])
 {
 	srand(time(NULL));
+	double PC[3]={0.6,0.2,0};//CE leve(0,1,2)-->(40%,40%,20%), ratio of devices in period_UL report.
+	int CE_Level,Num_CE_Level[3]={0};
+	for (int i = 0; i < 100000; ++i)
+	{
+		double pc=uniform_rng();
+		if(pc>PC[0])	Num_CE_Level[0]++;
+		else if((pc<PC[0])&&(pc>PC[1]))	Num_CE_Level[1]++;
+		else if((pc>=PC[2])&&(pc<PC[1]))	Num_CE_Level[2]++;
+	}
+	int Total=Num_CE_Level[0]+Num_CE_Level[1]+Num_CE_Level[2];
+	double p_CE0,p_CE1,p_CE2;
+	p_CE0=(double)Num_CE_Level[0]/Total;
+	p_CE1=(double)Num_CE_Level[1]/Total;
+	p_CE2=(double)Num_CE_Level[2]/Total;
+	printf("CE0:%lf,CE1:%lf,CE2:%lf\n",p_CE0,p_CE1,p_CE2);
+	system("pause");
+
 	printf("RAND_MAX:%d\n", RAND_MAX);
 	for (int i = 0; i < 1000; ++i)
 	{

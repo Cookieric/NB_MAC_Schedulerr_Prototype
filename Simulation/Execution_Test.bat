@@ -13,12 +13,18 @@ REM $ cd /home/usr/code
 REM $ ./bin/main
 REM Ouput a /home/usr/code/log.txt
 REM The path is related to excuted index path...
+
 @echo off
 
-start /D"C:\Users\bmw\Desktop\Thesis_Being\NB_MAC_Scheduler_Prototype\Simulation\build\" Simulation.exe 6
+REM FOR %%a IN (香蕉,你的,巴拉) DO (
+REM   echo %%a
+REM )
 
-REM start /D"C:\Users\bmw\Desktop\Thesis_Being\NB_MAC_Scheduler_Prototype\Simulation\build\" Simulation.exe 1
+REM For /L %%a in (0,1,9) DO (
+REM start /D"C:\Users\bmw\Desktop\Thesis_Being\NB_MAC_Scheduler_Prototype\Simulation\build\" Simulation.exe %%a)
+
+start /D"C:\Users\bmw\Desktop\Thesis_Being\NB_MAC_Scheduler_Prototype\Simulation\build\" Simulation.exe 1
 
 echo Simulation is executed...
 
-rem pause
+pause

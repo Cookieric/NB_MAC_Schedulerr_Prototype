@@ -64,6 +64,16 @@ double uniform_rng()
   //LOG_D(OTG,"Uniform taus random number= %lf\n", random);
   return random;
 }
+//For CCE allocation
+bool compareMyType5 (const HI_DCI0_request_t &a, const HI_DCI0_request_t &b)
+{
+	return a.DCI_Format.DCI_UL_PDU.startTime < b.DCI_Format.DCI_UL_PDU.startTime;
+}
+
+bool compareMyType4 (const HI_DCI0_request_t &a, const HI_DCI0_request_t &b)
+{
+	return a.DCI_Format.DCI_UL_PDU.endTime > b.DCI_Format.DCI_UL_PDU.endTime;
+}
 
 bool compareMyType3 (const UE_TEMPLATE_NB &a, const UE_TEMPLATE_NB &b)
 {
@@ -71,6 +81,15 @@ bool compareMyType3 (const UE_TEMPLATE_NB &a, const UE_TEMPLATE_NB &b)
 	// if(a.round!=b.round)	return a.round > b.round;
 	// else	return a.CE_Level < b.CE_Level;
 }
+uint8_t get_aggregation(uint32_t CE_Level,uint32_t T_SearchSpace,uint32_t R)
+{
+	//It could choose 1 or 2 base on channel quality, CE 0 has best channel quality
+	//If channel quality is low use a higher aggregation level
+	if((T_SearchSpace==1)&&(R==1)&&(CE_Level==0))	return 1;
+	else if((T_SearchSpace==2)&&(R==1)&&(CE_Level==0))	return 1;
+	else	return 2;
+}
+
 extern vector<int> Sfreq;
 int get_nprah_resource(int End_Time,SIB2_NB & SIB2_NB_S)
 {
@@ -202,9 +221,10 @@ uint32_t check_if_NPRACH(SIB2_NB & SIB2_NB_S,uint32_t UL_ChannelTime,uint32_t Fr
 
 #define sib1_startingRF 0 // it means SIB1 start sched at first RF.  1 means start at second RF.
 uint32_t sib1_Period=256;//256 RF
-bool shcedSIB1=false,schedSIB2=false,lock=false;
-uint32_t SIscheSubframe;
-uint32_t t_si_Period,t_si_windowStart,si_windowEnd;
+bool shcedSIB1=false;
+// bool schedSIB2=false,lock=false;
+// uint32_t SIscheSubframe;
+// uint32_t t_si_Period,t_si_windowStart,si_windowEnd;
 
 uint32_t check_if_DL_subframe(uint32_t Sche_H_SFN,uint32_t scheFrame,uint32_t scheSubframe,MIB_NB & MIB_NB_S,SIB1_NB & SIB1_NB_S)
 {
@@ -226,7 +246,7 @@ uint32_t check_if_DL_subframe(uint32_t Sche_H_SFN,uint32_t scheFrame,uint32_t sc
     uint32_t TBS_Index=MIB_NB_S.schedulingInfoSIB1;
     uint32_t TBS_SIB1=getTBS_SIB1(TBS_Index);
     uint32_t repetitionOffset=sib1_Period/repetitionNum_SIB1;//64
-	uint32_t T=Sche_H_SFN * 102400+scheFrame * 10+scheSubframe;
+	uint32_t T=Sche_H_SFN * 10240+scheFrame * 10+scheSubframe;
 	uint32_t SIB1_T=T%repetitionOffset;//144 mod 64=16
     if((0<=SIB1_T)&&(SIB1_T<=16))   shcedSIB1=true;//0~15
     else	shcedSIB1=false;
@@ -346,8 +366,6 @@ void PossibleSearchspace(SIB2_NB & SIB2_NB_S,vector<vector<uint32_t> > & locatio
 // uint8_t DCIs_resource_determinaiton(uint32_t scheFrame,uint32_t scheSubframe,SIB2_NB * SIB2_NB_S,list<UE_TEMPLATE_NB> & UE_Info_List,Sche_RES_t & Sche_Response,uint32_t *DL_Channel_bitmap)
 uint8_t DCIs_resource_determinaiton(uint32_t scheH_SFN,uint32_t scheFrame,uint32_t scheSubframe,uint32_t pp,MIB_NB & MIB_NB_S,SIB1_NB & SIB1_NB_S,SIB2_NB & SIB2_NB_S,list<UE_TEMPLATE_NB> & UE_Info_List,list<HI_DCI0_request_t> & DCI_List)
 {
-
-
 	// DCI_Queue.DCI_Format.DCI_UL_PDU.Aggregation_L
 	// DCI_Queue.DCI_Format.DCI_UL_PDUstartTime;
 	// DCI_Queue.DCI_Format.DCI_UL_PDUendTime;
@@ -489,7 +507,7 @@ uint8_t DCIs_resource_determinaiton(uint32_t scheH_SFN,uint32_t scheFrame,uint32
 
 uint8_t get_CE_level()
 {
-	double PC[3]={0.5,0.2,0};//CE leve(0,1,2)-->(50%,30%,20%), ratio of devices in period_UL report.
+	double PC[3]={0.6,0.2,0};//CE leve(0,1,2)-->(40%,40%,20%), ratio of devices in period_UL report.
 	double pc=uniform_rng();
 	if(pc>PC[0])	return 0;
 	else if((pc<PC[0])&&(pc>PC[1]))	return 1;
@@ -581,7 +599,7 @@ uint32_t Sche_res(frame_t frame,sub_frame_t subframes,Sche_RES_t & Sche_Response
 	typename list<HI_DCI0_request_t>::iterator DCI_it1 = DCI_List.begin();
 	if((DCI_Send==(*DCI_it1).DCI_Format.DCI_UL_PDU.startTime)&&(DCI_Send!=0))
 	{
-		LOG("H_SFN:%d,frame:%d,subframes:%d,Send DCI(DCI startTime/EndTime:%d/%d) to PHY from DCI_List\n",H_SFN,frame,subframes,(*DCI_it1).DCI_Format.DCI_UL_PDU.startTime,(*DCI_it1).DCI_Format.DCI_UL_PDU.endTime);
+		// LOG("H_SFN:%d,frame:%d,subframes:%d,Send DCI(DCI startTime/EndTime:%d/%d) to PHY from DCI_List\n",H_SFN,frame,subframes,(*DCI_it1).DCI_Format.DCI_UL_PDU.startTime,(*DCI_it1).DCI_Format.DCI_UL_PDU.endTime);
 		DCI_List.pop_front ();
 		// system("pause");
 	}
@@ -590,10 +608,12 @@ uint32_t Sche_res(frame_t frame,sub_frame_t subframes,Sche_RES_t & Sche_Response
 uint32_t totalNumUE=0;
 extern uint8_t TotalNumUE[10];//{12,18,24,30,36,42,48,54,60,66}
 extern uint8_t TotalNumUE_H[10];//{12,24,36,48,60,72,84,96,108,120};
+extern int CEi_NumUE[3];
 extern bool simCtrl;
 extern uint8_t runCase;//0,1,2,3,4,5,6,7,8,9
 extern uint8_t highOfferedLoad;
 int new_num_UE=0;
+int UE_id=0;
 
 uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 {
@@ -602,14 +622,14 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
     typename list<UE_TEMPLATE_NB>::iterator it1;
     if(((H_SFN * 10240+frame * 10+subframes)%1000)==0)//New UE's Msg3 arrive with fixed Inter aiival time
     {
-    	LOG("New UEs' Msg3 arrive at frame:%d,subframes:%d\n",frame,subframes);
-    	static int UE_id=0;
-    	if(!highOfferedLoad)	new_num_UE=6;
-    	else	new_num_UE=24;
-    	LOG("new_num_UE:%d\n",new_num_UE);
+    	// LOG("New UEs' Msg3 arrive at frame:%d,subframes:%d\n",frame,subframes);
+    	// static int UE_id=0;
+    	if(highOfferedLoad==0)	new_num_UE=6;
+    	else if(highOfferedLoad==1)	new_num_UE=24;
+    	// LOG("new_num_UE:%d\n",new_num_UE);
     	// system("pause");
     	totalNumUE=totalNumUE+new_num_UE;
-    	if(highOfferedLoad!=1)
+    	if(highOfferedLoad==0)
     	{
 	    	if(totalNumUE>=TotalNumUE[runCase])//{12,18,24,30,36,42,48,54,60,66};
 	    	{
@@ -617,7 +637,7 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 	    		simCtrl=false;
 	    	}
 	    }
-	    else
+	    else if(highOfferedLoad==1)
 	    {
 	    	if(totalNumUE>TotalNumUE_H[runCase])//{12,24,36,48,60,72,84,96,108,120};
 	    	{
@@ -666,13 +686,14 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 	    		UL_UE_Info.num_RU=-1;
 	    		UL_UE_Info.remainging_subframe=-1;
 	    		list<UE_TEMPLATE_NB> & UE_Info_List=UL_Indicaiton.UL_UE_Info_List[UL_UE_Info.CE_Level];
+	    		CEi_NumUE[UL_UE_Info.CE_Level]++;
 	    		UE_Info_List.push_back (UL_UE_Info);//Add to UE list
 	    		++UE_id;
 	    	}
 			for (int i = 0; i < 3; ++i)
 			{
 				list<UE_TEMPLATE_NB> & UE_Info_List=UL_Indicaiton.UL_UE_Info_List[i];
-				LOG("UL_UE_Info_List[%d].size:%d\n",i,UE_Info_List.size());
+				// LOG("UL_UE_Info_List[%d].size:%d\n",i,UE_Info_List.size());
 		    	for (it1=UE_Info_List.begin(); it1!=UE_Info_List.end();++it1)
 		    	{
 		            if(((*it1).CRC_indication==0)&&((*it1).configured==false))//Get the time of schedule Msg5
