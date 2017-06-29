@@ -70,7 +70,7 @@ uint8_t runCase;//0,1,2,3,4,5,6,7,8
 int simTimes=0;
 /* After simTimes, Sum total # of devices and delay for each CE level */
 extern int Sum_Delay[3];
-int CEi_NumUE[3]={0,0,0};
+uint32_t CEi_NumUE[3]={0,0,0};
 uint32_t Sum_End_Time=0;
 int Sum_nprach_resource_U=0;
 /*Parameters should be initilize before each simulation time...*/
@@ -85,9 +85,7 @@ extern int UE_id;
 
 //1: pp are same for 3 CE levels
 //2: pp are different for 3 CE levels
-//3: CSS/USS are the same
-//4: CSS/USS are different(alpha offset is changed..)
-# define simCase 1
+# define simCase 2
 //0:low offered load-->6.. report/sec
 //1:high offered load-->12 or 18.. report/sec
 uint8_t highOfferedLoad=0;
@@ -101,14 +99,14 @@ ofstream resourceUtilization_pp_not_same,resourceUtilization_pp_not_same_H;
 ofstream AverageDelay_pp_not_sameCE0,AverageDelay_pp_not_sameCE1,AverageDelay_pp_not_sameCE2;
 ofstream AverageDelay_pp_not_sameCE0_H,AverageDelay_pp_not_sameCE1_H,AverageDelay_pp_not_sameCE2_H;
 
-//Case 3
-ofstream resourceUtilization_pp_same1,resourceUtilization_pp_same_H1;
-ofstream AverageDelay_pp_sameCE0_1,AverageDelay_pp_sameCE1_1,AverageDelay_pp_sameCE2_1;
-ofstream AverageDelay_pp_sameCE0_H1,AverageDelay_pp_sameCE1_H1,AverageDelay_pp_sameCE2_H1;
-//Case 4
-ofstream resourceUtilization_pp_not_same1,resourceUtilization_pp_not_same_H1;
-ofstream AverageDelay_pp_not_sameCE0_1,AverageDelay_pp_not_sameCE1_1,AverageDelay_pp_not_sameCE2_1;
-ofstream AverageDelay_pp_not_sameCE0_H1,AverageDelay_pp_not_sameCE1_H1,AverageDelay_pp_not_sameCE2_H1;
+// //Case 3
+// ofstream resourceUtilization_pp_same1,resourceUtilization_pp_same_H1;
+// ofstream AverageDelay_pp_sameCE0_1,AverageDelay_pp_sameCE1_1,AverageDelay_pp_sameCE2_1;
+// ofstream AverageDelay_pp_sameCE0_H1,AverageDelay_pp_sameCE1_H1,AverageDelay_pp_sameCE2_H1;
+// //Case 4
+// ofstream resourceUtilization_pp_not_same1,resourceUtilization_pp_not_same_H1;
+// ofstream AverageDelay_pp_not_sameCE0_1,AverageDelay_pp_not_sameCE1_1,AverageDelay_pp_not_sameCE2_1;
+// ofstream AverageDelay_pp_not_sameCE0_H1,AverageDelay_pp_not_sameCE1_H1,AverageDelay_pp_not_sameCE2_H1;
 
 //Evaluation Performance
 double T_AvailResource[10]={0};
@@ -117,6 +115,8 @@ int T_Average_Delay[3][10]={0};
 
 int main(int argc, char const *argv[])//design simulation base on different argv/argc form bat...
 {
+	clock_t t;
+	t = clock();
 	srand(time(NULL));
 	if(argc!=2)
 	{
@@ -385,7 +385,7 @@ int main(int argc, char const *argv[])//design simulation base on different argv
 			UL_Channel.clear();
 			UL_Channel.assign (numTone,0);
 			simTimes++;
-			if(simTimes==100)	break;
+			if(simTimes==10000)	break;
 			else continue;
 		}
 		// if((H_SFN * 1024+frame * 10+subframes)%5000==0)
@@ -414,7 +414,7 @@ int main(int argc, char const *argv[])//design simulation base on different argv
     T_Average_Delay[2][runCase]=Sum_Delay[2]/CEi_NumUE[2];
     T_AvailResource[runCase]=(double)((Sum_End_Time * 12) - Sum_nprach_resource_U);
 	T_OccupiedResource[runCase]=(double)(Sum_Occupied_resource__U);
-    LOG("End_Time:%d,Total # of UE:%d,T_Average_DelayCE0:%d,T_Average_DelayCE1:%d,T_Average_DelayCE2:%d,T_AvailResource[runCase]:%lf,T_OccupiedResource[runCase]:%lf\n",Sum_End_Time,totalNumUE,T_Average_Delay[0][runCase],T_Average_Delay[1][runCase],T_Average_Delay[2][runCase],T_AvailResource[runCase],T_OccupiedResource[runCase]);
+    LOG("End_Time:%d,Total # of UE:%d,T_Average_DelayCE0:%d,T_Average_DelayCE1:%d,T_Average_DelayCE2:%d,T_AvailResource[runCase]:%lf,T_OccupiedResource[runCase]:%lf,U:%lf\n",Sum_End_Time,totalNumUE,T_Average_Delay[0][runCase],T_Average_Delay[1][runCase],T_Average_Delay[2][runCase],T_AvailResource[runCase],T_OccupiedResource[runCase],T_OccupiedResource[runCase]/T_AvailResource[runCase]);
     // system("pause");
 	if(simCase==1)
 	{
@@ -473,6 +473,8 @@ int main(int argc, char const *argv[])//design simulation base on different argv
 			// AverageDelay_pp_not_same.close();
 		}
 	}
+	t = clock() - t;
+	LOG("Computing Time:%f seconds\n",((float)t)/CLOCKS_PER_SEC);
 	system("pause");
 	return 0;
 }

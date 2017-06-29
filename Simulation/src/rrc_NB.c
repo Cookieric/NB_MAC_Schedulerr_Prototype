@@ -180,7 +180,7 @@ int Filter_SIB2_NB_Config(SIB2_NB * SIB2_NB_S)
 							SIB2_NB_S->num_Subcarrier[0]=24;
 							SIB2_NB_S->subcarrier_Offset[0]=0;
 							SIB2_NB_S->npdcch_NumRepetitions_RA[0]=rmax[n];
-							SIB2_NB_S->npdcch_StartSF_CSS_RA[0]=64;//G
+							SIB2_NB_S->npdcch_StartSF_CSS_RA[0]=16;//G
 							SIB2_NB_S->npdcch_Offset_RA[0]=0;//Alpha offset
 							SIB2_NB_S->rawindow[0]=2;//2pp
 							SIB2_NB_S->candidate[0]=candidate[m];//8, DCI RepNum(00)-->rmax[m]/8=R(1)
@@ -197,7 +197,7 @@ int Filter_SIB2_NB_Config(SIB2_NB * SIB2_NB_S)
 							SIB2_NB_S->num_Subcarrier[1]=12;
 							SIB2_NB_S->subcarrier_Offset[1]=24;
 							SIB2_NB_S->npdcch_NumRepetitions_RA[1]=rmax[n];
-							SIB2_NB_S->npdcch_StartSF_CSS_RA[1]=32;
+							SIB2_NB_S->npdcch_StartSF_CSS_RA[1]=16;
 							SIB2_NB_S->npdcch_Offset_RA[1]=0;
 							SIB2_NB_S->rawindow[1]=2;
 							SIB2_NB_S->candidate[1]=candidate[m];//8, DCI RepNum(00)-->rmax[m]/8=R(2)

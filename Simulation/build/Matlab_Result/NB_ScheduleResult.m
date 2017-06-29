@@ -64,6 +64,7 @@ ys3 = resourceUtilization_pp_not_same(:,2);
 %% Check Simulation: Utilization
 % hs = plot(xs, ys,'bo-');
 figure(1)
+% hs = plot(xsCE0, ysCE0,'bo-',xsCE1,ysCE1,'rsquare-',xsCE2,ysCE2,'gdiamond-');
 hs = plot(xsCE0, ysCE0,'bo-',xsCE1,ysCE1,'rsquare-',xsCE2,ysCE2,'gdiamond-',xs1CE0, ys1CE0,'co-',xs1CE1,ys1CE1,'ksquare-',xs1CE2,ys1CE2,'ydiamond-');
 % hs = plot(xs, ys,'bo',xs1, ys1,'rsquare',xs2, ys2,'gdiamond');
 set(hs, 'linewidth', 1.5);    % 曲線寬度改為1.5
@@ -73,6 +74,7 @@ title('Average Delay for each UE in three CE levels');
 legend('Case1:CE0','Case1:CE1','Case1:CE2','Case2:CE0','Case2:CE1','Case2:CE2');
 hold on;
 figure(2)
+% hs1 = plot(xs2, ys2,'bo-');
 hs1 = plot(xs2, ys2,'bo-',xs3,ys3,'rsquare-');
 set(hs1, 'linewidth', 1.5);    % 曲線寬度改為1.5
 set(hs1, 'linewidth', 1.5);    % 曲線寬度改為1.5

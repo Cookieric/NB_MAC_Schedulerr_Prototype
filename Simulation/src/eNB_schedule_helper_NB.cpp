@@ -616,7 +616,7 @@ uint32_t Sche_res(frame_t frame,sub_frame_t subframes,Sche_RES_t & Sche_Response
 uint32_t totalNumUE=0;
 extern uint8_t TotalNumUE[10];//{12,18,24,30,36,42,48,54,60,66}
 extern uint8_t TotalNumUE_H[10];//{12,24,36,48,60,72,84,96,108,120};
-extern int CEi_NumUE[3];
+extern uint32_t CEi_NumUE[3];
 bool simCtrl=true;
 extern uint8_t runCase;//0,1,2,3,4,5,6,7,8,9
 extern uint8_t highOfferedLoad;
@@ -634,7 +634,7 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
     	// LOG("New UEs' Msg3 arrive at frame:%d,subframes:%d\n",frame,subframes);
     	// static int UE_id=0;
     	if(highOfferedLoad==0)	new_num_UE=6;
-    	else if(highOfferedLoad==1)	new_num_UE=24;
+    	else if(highOfferedLoad==1)	new_num_UE=12;
     	// LOG("new_num_UE:%d\n",new_num_UE);
     	// system("pause");
     	totalNumUE=totalNumUE+new_num_UE;

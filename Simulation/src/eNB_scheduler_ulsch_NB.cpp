@@ -95,8 +95,9 @@ void NB_schedule_ulsch(uint32_t scheH_SFN,frame_t scheFrame,sub_frame_t scheSubf
 	// DCI_List.DCI_Format.DCI_UL_PDUendTime;
 	// DCI_List.DCI_Format.DCI_UL_PDU.DCIN0
 	// ! \brief UE list used by eNB to order UEs for scheduling
-	if(CE_Level<0 || CE_Level>2 ) { // check if the value is out of range
+	if((CE_Level<0) || (CE_Level)>2 ) { // check if the value is out of range
     // add warning and print the value of CE_level, set ce_level to zero and proceed
+        LOG("Warning: Exceed CE level definition, set to CE level to zero and proceed..\n");
         scheFlag = true;
         CE_Level = 0;
     } else scheFlag=true;
@@ -403,8 +404,8 @@ void NB_schedule_ulsch(uint32_t scheH_SFN,frame_t scheFrame,sub_frame_t scheSubf
 			//Check if DCI have available reosurce in this pp.
 			if((*it1).schedStatus==false)
             {
-                LOG("No DCIs available reosurce in this pp...\n");
-                system("pause");
+                // LOG("No DCIs available reosurce in this pp...\n");
+                // system("pause");
                 continue;
             }
 
@@ -455,7 +456,7 @@ void NB_schedule_ulsch(uint32_t scheH_SFN,frame_t scheFrame,sub_frame_t scheSubf
 				DCI_List.pop_back ();
 				(*it1).schedStatus=false;
 				LOG("Can't find available UL resource skip this UE scheduling in this pp...\n");
-                system("pause");
+                // system("pause");
 				continue;//skip this loop for this UE.
 			}
 
