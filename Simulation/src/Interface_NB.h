@@ -18,11 +18,9 @@ typedef struct UL_IND
 
 typedef struct Sche_RES
 {
-	// HI_DCI0_request_t HI_DCI0={0};
 	list<struct HI_DCI0_request> DCI_L;
-	// queue<HI_DCI0_request_t> DCI_Q;
 	//DL config request
-	//preamble_List
+	//Tx request
 }Sche_RES_t;
 
 uint32_t Sche_res(frame_t,sub_frame_t,Sche_RES_t &);

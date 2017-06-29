@@ -112,7 +112,7 @@ int get_nprah_resource(int End_Time,SIB2_NB & SIB2_NB_S)
 			}
 		}
 	}
-	LOG("nprah_resource:%d\n",nprah_resource);
+	// LOG("nprah_resource:%d\n",nprah_resource);
 	return nprah_resource/4;
 }
 
@@ -554,7 +554,7 @@ double pareto_dist(double scale, double shape)
 
 int get_DV_index(UE_TEMPLATE_NB & UE_Info)//UE function: payload size follow pareto distri.
 {
-	double payloadSize=pareto_dist(20,2.5);//scale=20, Shape=2.5
+	double payloadSize=pareto_dist(20,2.5);//scale=20, Shape=2.5, gen_packet(traffic_model)
 	if(payloadSize>200)
 	{
 		payloadSize=200;
@@ -568,7 +568,7 @@ int get_DV_index(UE_TEMPLATE_NB & UE_Info)//UE function: payload size follow par
 	{
 		if((payloadSize<=DV_table[i]) && (payloadSize>=0))	return	i;
 	}
-	return 14;
+	return 14; // Maximum size in DV table
 }
 
 int get_BSR_index(int payloadSize)
@@ -596,20 +596,28 @@ uint32_t Sche_res(frame_t frame,sub_frame_t subframes,Sche_RES_t & Sche_Response
 {
 	uint32_t DCI_Send=H_SFN * 10240+frame * 10+subframes;
 	list<HI_DCI0_request_t> & DCI_List=Sche_Response.DCI_L;
-	typename list<HI_DCI0_request_t>::iterator DCI_it1 = DCI_List.begin();
-	if((DCI_Send==(*DCI_it1).DCI_Format.DCI_UL_PDU.startTime)&&(DCI_Send!=0))
+	// typename list<HI_DCI0_request_t>::iterator DCI_it1 = DCI_List.begin();
+	while(!DCI_List.empty())
 	{
-		// LOG("H_SFN:%d,frame:%d,subframes:%d,Send DCI(DCI startTime/EndTime:%d/%d) to PHY from DCI_List\n",H_SFN,frame,subframes,(*DCI_it1).DCI_Format.DCI_UL_PDU.startTime,(*DCI_it1).DCI_Format.DCI_UL_PDU.endTime);
+		// LOG("H_SFN:%d,frame:%d,subframes:%d",H_SFN,frame,subframes);
+		// LOG(",Send DCI(DCI startTime/EndTime:%d/",DCI_List.front().DCI_Format.DCI_UL_PDU.startTime);
+		// LOG("%d\n",DCI_List.front().DCI_Format.DCI_UL_PDU.endTime);
+		// LOG("H_SFN:%d,frame:%d,subframes:%d,Send DCI(DCI startTime/EndTime:%d/%d) to PHY from DCI_List\n",H_SFN,frame,subframes,DCI_List.front().DCI_Format.DCI_UL_PDU.startTime,DCI_List.front().DCI_Format.DCI_UL_PDU.startTime.endTime);
 		DCI_List.pop_front ();
-		// system("pause");
 	}
+	// if((DCI_Send==(*DCI_it1).DCI_Format.DCI_UL_PDU.startTime)&&(DCI_Send!=0))
+	// {
+		// LOG("H_SFN:%d,frame:%d,subframes:%d,Send DCI(DCI startTime/EndTime:%d/%d) to PHY from DCI_List\n",H_SFN,frame,subframes,(*DCI_it1).DCI_Format.DCI_UL_PDU.startTime,(*DCI_it1).DCI_Format.DCI_UL_PDU.endTime);
+		// DCI_List.pop_front ();
+		// system("pause");
+	// }
 }
 //Evaluation Performance
 uint32_t totalNumUE=0;
 extern uint8_t TotalNumUE[10];//{12,18,24,30,36,42,48,54,60,66}
 extern uint8_t TotalNumUE_H[10];//{12,24,36,48,60,72,84,96,108,120};
 extern int CEi_NumUE[3];
-extern bool simCtrl;
+bool simCtrl=true;
 extern uint8_t runCase;//0,1,2,3,4,5,6,7,8,9
 extern uint8_t highOfferedLoad;
 int new_num_UE=0;
@@ -620,6 +628,7 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
     // list<UE_TEMPLATE_NB> & UE_Info_List=UL_Indicaiton.UL_UE_Info_List[0];
     // list<UE_TEMPLATE_NB> & UE_Info_List=UL_Indicaiton.UL_UE_Info_List[CE_Level]
     typename list<UE_TEMPLATE_NB>::iterator it1;
+    // ctime=H_SFN * 10240+frame * 10+subframes; // calculate the current time
     if(((H_SFN * 10240+frame * 10+subframes)%1000)==0)//New UE's Msg3 arrive with fixed Inter aiival time
     {
     	// LOG("New UEs' Msg3 arrive at frame:%d,subframes:%d\n",frame,subframes);
@@ -631,9 +640,10 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
     	totalNumUE=totalNumUE+new_num_UE;
     	if(highOfferedLoad==0)
     	{
-	    	if(totalNumUE>=TotalNumUE[runCase])//{12,18,24,30,36,42,48,54,60,66};
+	    	if(totalNumUE>TotalNumUE[runCase])//{6,12,18,24,30,36,42,48,54,60};
 	    	{
-	    		totalNumUE=TotalNumUE[runCase]-new_num_UE;
+	    		// totalNumUE=TotalNumUE[runCase]-new_num_UE;
+	    		totalNumUE=TotalNumUE[runCase];
 	    		simCtrl=false;
 	    	}
 	    }
@@ -641,10 +651,13 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 	    {
 	    	if(totalNumUE>TotalNumUE_H[runCase])//{12,24,36,48,60,72,84,96,108,120};
 	    	{
-	    		totalNumUE=TotalNumUE_H[runCase]-new_num_UE;
+	    		// totalNumUE=TotalNumUE_H[runCase]-new_num_UE;
+	    		totalNumUE=TotalNumUE[runCase];
 	    		simCtrl=false;
 	    	}
 	    }
+	    // LOG("totalNumUE:%d\n",totalNumUE);
+	    // system("pause");
     	// int *ptr = &var;//avoid copy constructor action
     	// int &ptr = var;//avoid copy constructor action
     	// list<UE_TEMPLATE_NB> & UE_Info_List=UL_Indicaiton.UL_UE_Info_List;
@@ -704,7 +717,7 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 		        		UE_TEMPLATE_NB *j = &*it1;
 						(*it1).DV=get_DV_index(*j);
 						(*it1).UL_Buffer_Size=DV_table[(*it1).DV];
-						if((*it1).UL_Buffer_Size>200)	(*it1).UL_Buffer_Size=200;
+						// if((*it1).UL_Buffer_Size>200)	(*it1).UL_Buffer_Size=200;
 		            }
 		            else if(((*it1).CRC_indication==1)&&((*it1).configured==false))//Msg3 retransmission
 		            {
@@ -735,12 +748,12 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 	            if((*it1).configured==false)
 	            {
 	                (*it1).CRC_indication=get_CRC_indication();
-	                (*it1).round=1;
+	                (*it1).round=1; // round++
 	                // (*it1).BSR=get_BSR_index((*it1).remaining_Buffer_Sizes);
 	                // (*it1).UL_Buffer_Size=BSR_table[(*it1).BSR];
 	                if((*it1).CRC_indication==1)//// Msg3 retransmission
 	                {
-	                    (*it1).round++;
+	                    (*it1).round++; // trigger time recalculation
 	                }
 	                else
 	                {
@@ -756,7 +769,7 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 	            else//Msg5,UL Info
 	            {
 	    			(*it1).CRC_indication=get_CRC_indication();
-	    			(*it1).round=1;
+	    			(*it1).round=1;//round++;
 	    			(*it1).DV=-1;//When receive BSR, clear DV
 	    			// (*it1).BSR=get_BSR_index((*it1).remaining_Buffer_Sizes);
 	    			//Update UE UL buffer size base on UL grant(DCI format N0)

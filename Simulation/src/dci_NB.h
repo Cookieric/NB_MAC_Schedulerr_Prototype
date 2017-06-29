@@ -149,7 +149,7 @@ typedef union DCI_Content{
 
 //  DCI Format Type 0 (180 kHz, 23 bits)
 typedef struct HI_DCI0_request {
-	uint8_t num_DCI;//Number of DCI PDUs included in this message
+	uint8_t num_DCI;//Number of DCI PDUs included in this message in this time
 	uint8_t PDU_Type;//0-->DCI N0 PDU
     DCI_Content_t DCI_Format;
 } HI_DCI0_request_t;

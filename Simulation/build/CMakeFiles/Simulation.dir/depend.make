@@ -5,13 +5,6 @@ CMakeFiles/Simulation.dir/rrc_NB.c.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC
 CMakeFiles/Simulation.dir/rrc_NB.c.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/rrc_NB.h
 CMakeFiles/Simulation.dir/rrc_NB.c.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/type_NB.h
 
-CMakeFiles/Simulation.dir/eNB_schedule_function_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/dci_NB.h
-CMakeFiles/Simulation.dir/eNB_schedule_function_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/eNB_schedule_function_NB.cpp
-CMakeFiles/Simulation.dir/eNB_schedule_function_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/interface_NB.h
-CMakeFiles/Simulation.dir/eNB_schedule_function_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/rrc_NB.h
-CMakeFiles/Simulation.dir/eNB_schedule_function_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/sche_pro_NB.h
-CMakeFiles/Simulation.dir/eNB_schedule_function_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/type_NB.h
-
 CMakeFiles/Simulation.dir/eNB_schedule_helper_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/dci_NB.h
 CMakeFiles/Simulation.dir/eNB_schedule_helper_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/eNB_schedule_helper_NB.cpp
 CMakeFiles/Simulation.dir/eNB_schedule_helper_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/interface_NB.h
@@ -25,4 +18,17 @@ CMakeFiles/Simulation.dir/eNB_scheduler_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_
 CMakeFiles/Simulation.dir/eNB_scheduler_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/rrc_NB.h
 CMakeFiles/Simulation.dir/eNB_scheduler_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/sche_pro_NB.h
 CMakeFiles/Simulation.dir/eNB_scheduler_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/type_NB.h
+
+CMakeFiles/Simulation.dir/eNB_scheduler_RA_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/eNB_scheduler_RA_NB.cpp
+
+CMakeFiles/Simulation.dir/eNB_scheduler_bch_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/eNB_scheduler_bch_NB.cpp
+
+CMakeFiles/Simulation.dir/eNB_scheduler_dlsch_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/eNB_scheduler_dlsch_NB.cpp
+
+CMakeFiles/Simulation.dir/eNB_scheduler_ulsch_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/dci_NB.h
+CMakeFiles/Simulation.dir/eNB_scheduler_ulsch_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/eNB_scheduler_ulsch_NB.cpp
+CMakeFiles/Simulation.dir/eNB_scheduler_ulsch_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/interface_NB.h
+CMakeFiles/Simulation.dir/eNB_scheduler_ulsch_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/rrc_NB.h
+CMakeFiles/Simulation.dir/eNB_scheduler_ulsch_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/sche_pro_NB.h
+CMakeFiles/Simulation.dir/eNB_scheduler_ulsch_NB.cpp.obj: C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/type_NB.h
 
