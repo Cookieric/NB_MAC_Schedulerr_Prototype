@@ -11,7 +11,7 @@
 typedef struct _UE_TEMPLATE_NB
 {
 	//Get from preamble base on NPRACH Config
-	uint8_t CE_Level;	//After decode preamble, eNB will know UE's CE level.
+	uint32_t CE_Level;	//After decode preamble, eNB will know UE's CE level.
 	//C-RNTI of UE
 	rnti_t rnti;
 	uint32_t UE_id;

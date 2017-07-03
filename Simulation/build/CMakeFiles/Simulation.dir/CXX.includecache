@@ -17,11 +17,15 @@ stdlib.h
 -
 math.h
 -
+time.h
+-
 type_NB.h
 C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/type_NB.h
 rrc_NB.h
 C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/rrc_NB.h
 iostream
+-
+fstream
 -
 vector
 -
@@ -88,6 +92,8 @@ list
 queue
 -
 iostream
+-
+fstream
 -
 
 C:/Users/bmw/Desktop/Thesis_Being/NB_MAC_Scheduler_Prototype/Simulation/src/interface_NB.h

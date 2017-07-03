@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 #include "type_NB.h"
 #include "rrc_NB.h"
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <list>
 #include <queue>
@@ -505,7 +507,7 @@ uint8_t DCIs_resource_determinaiton(uint32_t scheH_SFN,uint32_t scheFrame,uint32
 	//  }
 }
 
-uint8_t get_CE_level()
+uint32_t get_CE_level()
 {
 	double PC[3]={0.6,0.2,0};//CE leve(0,1,2)-->(40%,40%,20%), ratio of devices in period_UL report.
 	double pc=uniform_rng();
@@ -615,13 +617,14 @@ uint32_t Sche_res(frame_t frame,sub_frame_t subframes,Sche_RES_t & Sche_Response
 //Evaluation Performance
 uint32_t totalNumUE=0;
 extern uint8_t TotalNumUE[10];//{12,18,24,30,36,42,48,54,60,66}
-extern uint8_t TotalNumUE_H[10];//{12,24,36,48,60,72,84,96,108,120};
+extern uint32_t TotalNumUE_H[10];//{12,24,36,48,60,72,84,96,108,120};
 extern uint32_t CEi_NumUE[3];
 bool simCtrl=true;
 extern uint8_t runCase;//0,1,2,3,4,5,6,7,8,9
 extern uint8_t highOfferedLoad;
 int new_num_UE=0;
 int UE_id=0;
+extern ofstream fout_LOG;
 
 uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 {
@@ -632,9 +635,10 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
     if(((H_SFN * 10240+frame * 10+subframes)%1000)==0)//New UE's Msg3 arrive with fixed Inter aiival time
     {
     	// LOG("New UEs' Msg3 arrive at frame:%d,subframes:%d\n",frame,subframes);
+		fout_LOG<<"New UEs' Msg3 arrive at "<<"H_SFN:"<<H_SFN<<"frame:"<<frame<<"subframes:"<<subframes<<endl;
     	// static int UE_id=0;
     	if(highOfferedLoad==0)	new_num_UE=6;
-    	else if(highOfferedLoad==1)	new_num_UE=12;
+    	else if(highOfferedLoad==1)	new_num_UE=60;
     	// LOG("new_num_UE:%d\n",new_num_UE);
     	// system("pause");
     	totalNumUE=totalNumUE+new_num_UE;
@@ -652,12 +656,13 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 	    	if(totalNumUE>TotalNumUE_H[runCase])//{12,24,36,48,60,72,84,96,108,120};
 	    	{
 	    		// totalNumUE=TotalNumUE_H[runCase]-new_num_UE;
-	    		totalNumUE=TotalNumUE[runCase];
+	    		totalNumUE=TotalNumUE_H[runCase];
 	    		simCtrl=false;
 	    	}
 	    }
 	    // LOG("totalNumUE:%d\n",totalNumUE);
 	    // system("pause");
+	    fout_LOG<<"totalNumUE:"<<totalNumUE<<endl;
     	// int *ptr = &var;//avoid copy constructor action
     	// int &ptr = var;//avoid copy constructor action
     	// list<UE_TEMPLATE_NB> & UE_Info_List=UL_Indicaiton.UL_UE_Info_List;
@@ -737,9 +742,10 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 		// LOG("UL_UE_Info_List[%d].size:%d\n",i,UE_Info_List.size());
     	for (it1=UE_Info_List.begin(); it1!=UE_Info_List.end();++it1)
     	{
-	        if(H_SFN * 10240+frame * 10+subframes==(*it1).sche_Msg5_Time)
+	        if((H_SFN * 10240+frame * 10+subframes)==(*it1).sche_Msg5_Time)
 	        {
 	            (*it1).configured=true;//Receive ACK for Msg4, Ready to schedule DCI N0 for Msg5 at next pp
+	            fout_LOG<<"[UE Arrival]"<<"CE_Level:"<<(*it1).CE_Level<<" UE_id:"<<(*it1).UE_id<<" FirstMsg3ArrivalTime:"<<(*it1).first_Arrival_Time<<" ACKforMsg4Time:"<<(*it1).sche_Msg5_Time<<"configured:"<<(*it1).configured<<endl;
 	        }
 	    	if((H_SFN * 10240+frame * 10+subframes)==(*it1).next_Arrival_Time)//next_Arrival_Time=BSR arrival time
 	    	{
@@ -748,38 +754,48 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 	            if((*it1).configured==false)
 	            {
 	                (*it1).CRC_indication=get_CRC_indication();
-	                (*it1).round=1; // round++
+	                // (*it1).round=1; // round++
+	                // (*it1).round++;
 	                // (*it1).BSR=get_BSR_index((*it1).remaining_Buffer_Sizes);
 	                // (*it1).UL_Buffer_Size=BSR_table[(*it1).BSR];
 	                if((*it1).CRC_indication==1)//// Msg3 retransmission
 	                {
+	                	fout_LOG<<"[UE Arrival]"<<" CE_Level:"<<(*it1).CE_Level<<" UE_id:"<<(*it1).UE_id<<" FirstMsg3ArrivalTime:"<<(*it1).first_Arrival_Time<<" ACKforMsg4Time:"<<(*it1).sche_Msg5_Time<<endl;
 	                    (*it1).round++; // trigger time recalculation
 	                }
 	                else
 	                {
+	                	(*it1).round=1;
 	                	(*it1).schedMsg3=false;//disable Msg3 flag
 		                (*it1).sche_Msg5_Time=(*it1).next_Arrival_Time+8 * 4+8 * 4 *(*it1).CE_Level+64;
 		        		(*it1).PHR=PHR_table[(*it1).CE_Level][(*it1).multi_tone];
 						UE_TEMPLATE_NB *j = &*it1;
 						(*it1).DV=get_DV_index(*j);
 						(*it1).UL_Buffer_Size=DV_table[(*it1).DV];
+						fout_LOG<<"[UE Arrival]"<<"CE_Level:"<<(*it1).CE_Level<<" UE_id:"<<(*it1).UE_id<<" FirstMsg3ArrivalTime:"<<(*it1).first_Arrival_Time<<" ACKforMsg4Time:"<<(*it1).sche_Msg5_Time<<endl;
 						// if((*it1).UL_Buffer_Size>200)	(*it1).UL_Buffer_Size=200;
 	                }
 	            }
 	            else//Msg5,UL Info
 	            {
 	    			(*it1).CRC_indication=get_CRC_indication();
-	    			(*it1).round=1;//round++;
-	    			(*it1).DV=-1;//When receive BSR, clear DV
-	    			// (*it1).BSR=get_BSR_index((*it1).remaining_Buffer_Sizes);
-	    			//Update UE UL buffer size base on UL grant(DCI format N0)
-	    			(*it1).payloadSize=(*it1).payloadSize-(*it1).allocate_Buffer_Size;
-	    			(*it1).BSR=get_BSR_index((*it1).payloadSize);
-	    			(*it1).UL_Buffer_Size=BSR_table[(*it1).BSR];
+	    			// (*it1).round=1;//round++;
+	    			// (*it1).round++;
 	    			// if((*it1).UL_Buffer_Size>200)	(*it1).UL_Buffer_Size=200;
 	                if((*it1).CRC_indication==1)//Ready to rescheudle Msg5, ULInfo
 	                {
+	                	(*it1).BSR=get_BSR_index((*it1).payloadSize);
 	                    (*it1).round++;
+	                }
+	                else
+	                {
+	                	(*it1).round=1;
+		    			(*it1).DV=-1;//When receive BSR, clear DV
+		    			// (*it1).BSR=get_BSR_index((*it1).remaining_Buffer_Sizes);
+		    			//Update UE UL buffer size base on UL grant(DCI format N0)
+		    			(*it1).payloadSize=(*it1).payloadSize-(*it1).allocate_Buffer_Size;
+		    			(*it1).BSR=get_BSR_index((*it1).payloadSize);
+		    			(*it1).UL_Buffer_Size=BSR_table[(*it1).BSR];
 	                }
 	            }
 	    		// LOG("CE_Level:%d,UE_id:%d,CRC_indication:%d,round:%d,multi_tone:%d,PHR:%d,DV:%d,BSR:%d,UL_Buffer_Size:%d,first_Arrival_Time:%d,sche_Msg5_Time:%d,payloadSize:%d\n",(*it1).CE_Level,(*it1).UE_id,(*it1).CRC_indication,(*it1).round,(*it1).multi_tone,(*it1).PHR,(*it1).DV,(*it1).BSR,(*it1).UL_Buffer_Size,(*it1).first_Arrival_Time,(*it1).sche_Msg5_Time,(*it1).payloadSize);
