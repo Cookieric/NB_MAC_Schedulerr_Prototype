@@ -45,9 +45,11 @@ Sche_RES_t Sche_Response;
 // list<UE_TEMPLATE_NB> UL_UE_Info_List
 
 
+uint32_t MIB_period=640;
 #define SI_entry 2//#1:SIB1-NB, #2:SIB23-NB
 uint32_t Cell_id=0;//Fixed base on NPSS/NSSS Calculation
 uint32_t H_SFN=0;//Hyper super frame = 1024 frame
+
 
 //Argument of NB_eNB_dlsch_ulsch_scheduler should be:
 //module_id_t module_idP,uint8_t cooperation_flag, frame_t frameP, sub_frame_t subframeP
@@ -58,38 +60,45 @@ vector<uint32_t> Searchspace(8,0);
 vector<vector<uint32_t> > locationS(3,Searchspace);
 vector<uint32_t> Sfreq;
 vector<uint32_t> UL_Channel;
-uint8_t CSS_flag=0;
+// uint8_t CSS_flag=0;
 
 int simTimes=0;
 /* After simTimes, Sum total # of devices and delay for each CE level */
-extern int Sum_Delay[3];
+extern uint32_t Sum_Delay[3];
 uint32_t CEi_NumUE[3]={0,0,0};
 uint32_t Sum_End_Time=0;
-int Sum_nprach_resource_U=0;
+uint32_t Sum_nprach_resource_U=0;
 /*Parameters should be initilize before each simulation time...*/
 int End_Time=0;
 extern int EndPoint;
 extern uint32_t totalNumUE;
 extern bool simCtrl;
-extern int Sum_Occupied_resource__U;
+extern uint32_t Sum_Occupied_resource__U;
 extern int UE_id;
+
+extern uint32_t P_Sum_Delay[2][3];
+extern uint32_t P_CE_NumUE[2][3];
+double P_delay[6]={0.0};
 
 //1: pp are same for 3 CE levels
 //2: pp are different for 3 CE levels
-# define simCase 2
+//3: pp are different with different payload size (low offered load) 20~200
+# define simCase 3
 //0:low offered load-->6.. report/sec
 //1:high offered load-->12 or 18.. report/sec
 uint8_t highOfferedLoad=0;
 
 //Simulation setting
-uint8_t TotalNumUE[10]={6,12,18,24,30,36,42,48,54,60};
+uint8_t TotalNumUE[10]={30,12,18,24,30,36,42,48,54,60};
 //{24,48,72,96,120,144,168,192,216,240};
 //{12,24,36,48,60,72,84,96,108,120};
 //{20,40,60,80,100,120,140,160,180,200};
-uint32_t TotalNumUE_H[10]={60,120,180,240,300,360,420,480,540,600};
-uint8_t runCase;//0,1,2,3,4,5,6,7,8
+uint32_t TotalNumUE_H[10]={50,20,120,80,100,120,140,160,180,200};
+uint8_t runCase;//0,1,2,3,4,5,6,7,8,9
 // extern int Sum_Delay;
 
+
+//Evaluate BSR map to different range of BSR table in eNB.
 //Case 1
 ofstream resourceUtilization_pp_same,resourceUtilization_pp_same_H;
 ofstream AverageDelay_pp_sameCE0,AverageDelay_pp_sameCE1,AverageDelay_pp_sameCE2;
@@ -98,6 +107,22 @@ ofstream AverageDelay_pp_sameCE0_H,AverageDelay_pp_sameCE1_H,AverageDelay_pp_sam
 ofstream resourceUtilization_pp_not_same,resourceUtilization_pp_not_same_H;
 ofstream AverageDelay_pp_not_sameCE0,AverageDelay_pp_not_sameCE1,AverageDelay_pp_not_sameCE2;
 ofstream AverageDelay_pp_not_sameCE0_H,AverageDelay_pp_not_sameCE1_H,AverageDelay_pp_not_sameCE2_H;
+//Case 3 for Evaluate different payload size
+uint32_t simDataSize=0;
+// uint32_t DataSize[10]={220,240,260,280,300,320,340,360,380,400};
+uint32_t DataSize[10]={20,40,60,80,100,120,140,160,180,200};
+// uint32_t DataSize[16]={200,220,240,260,280,300,320,340,359,380,400,420,440,460,480,500};
+uint32_t indexDataSize=0;
+//0:highest, 1:medium, 2:lowest
+uint8_t mappingBufferSize=0;
+uint8_t File_LOG_Flag=0;
+uint8_t LOG_Flag=0;
+
+
+ofstream AverageDelay_payloadSizeCE0,AverageDelay_payloadSizeCE1,AverageDelay_payloadSizeCE2,resourceUtilization__payloadSize;
+
+ofstream Low_High_Payload_AverageDelay;
+
 
 ofstream fout_LOG;
 
@@ -113,7 +138,7 @@ ofstream fout_LOG;
 //Evaluation Performance
 double T_AvailResource[10]={0};
 double T_OccupiedResource[10]={0};
-int T_Average_Delay[3][10]={0};
+double T_Average_Delay[3][10]={0};
 
 int main(int argc, char const *argv[])//design simulation base on different argv/argc form bat...
 {
@@ -191,6 +216,17 @@ int main(int argc, char const *argv[])//design simulation base on different argv
 			AverageDelay_pp_not_sameCE2_H.open("Matlab_Result\\AverageDelay_pp_not_sameCE2_H.csv", ios::app);
 		}
 	}
+	else if(simCase==3)
+	{
+		resourceUtilization__payloadSize.open("Matlab_Result\\resourceUtili_payloadSize.csv", ios::app);
+		AverageDelay_payloadSizeCE0.open("Matlab_Result\\AverageDelay_payloadSizeCE0.csv", ios::app);
+		AverageDelay_payloadSizeCE1.open("Matlab_Result\\AverageDelay_payloadSizeCE1.csv", ios::app);
+		AverageDelay_payloadSizeCE2.open("Matlab_Result\\AverageDelay_payloadSizeCE2.csv", ios::app);
+
+		Low_High_Payload_AverageDelay.open("Matlab_Result\\Low_High_Payload_AverageDelay.csv", ios::app);
+
+
+	}
 
 
 
@@ -261,19 +297,21 @@ int main(int argc, char const *argv[])//design simulation base on different argv
 	//Start to schedule
 	while(1)
 	{
-// generate frame and subframe for the simulation
+		// generate frame and subframe for the simulation
 		// generate MAC/PHY frame and subframe for tx(+1) and rx (-1)
 		// calcualte the ctime
 		// all of the above is the same for all the procedures
-// check which procedure has to be done now: i.e. ra, si, mib, ulsch,  etc
+		// check which procedure has to be done now: i.e. ra, si, mib, ulsch,  etc
 
 		if(H_SFN * 10240+frame * 10+subframes==0)
 		{
 			LOG("Start Simulation:%d\n",simTimes);
-			fout_LOG<<"Start Simulation:"<<simTimes<<endl;
+			// fout_LOG<<"Start Simulation:"<<simTimes<<endl;
 			// system("pause");
 		}
 		Ulsch_ind(frame,subframes,UL_Indicaiton);
+		// LOG("Finish Ulsch_ind\n");
+		// system("pause");
 		//New architecture delete UL/DL virtual channel structure
 		//Build UL/DL virtual channel structure at the start of previous SF of each pp.
 		// if(((H_SFN * 10240+frame * 10+subframes+1)%NPDCCH_period)==0)
@@ -297,19 +335,24 @@ int main(int argc, char const *argv[])//design simulation base on different argv
 
 		/*Start NB_eNB_dlsch_ulsch_scheduler*/
 		//Schedule MIB base on period.
-		if((H_SFN * 10240+frame * 10+subframes+1)%640==0)
+		if((H_SFN * 10240+frame * 10+subframes+1)%MIB_period==0)
 		{
 			// NB_schedule_MIB(frame,subframes,NPDCCH_period,DL_Channel_bitmap,false);//NPBCH
 		}
-		//Schedule SIs(SIB1,SIB23) base on period.
-		for (int i = 0; i < SI_entry; ++i)
+		//Schedule SIs(SIB1) base on period.
+		if(((H_SFN * 10240+frame * 10+subframes+1)%SI_period[0])==0)
+		{
+			// NB_schedule_SI(frame,subframes,NPDCCH_period,DL_Channel_bitmap,&MIB_NB_S, &SIB1_NB_S,false);
+		}
+		//Schedule SIs(SIB23) base on radio-frame offset and repetition pattern within SI window.
+		for (int i = 1; i < SI_entry; ++i)
 		{
 			if((H_SFN * 10240+frame * 10+subframes+1)%SI_period[i]==0)
 			{
 				// NB_schedule_SI(frame,subframes,NPDCCH_period,DL_Channel_bitmap,&MIB_NB_S, &SIB1_NB_S,false);
 			}
 		}
-		//Schedule RA/UL/DL at the previous SF of each pp for three CE levels.
+		//Schedule RA/Paging at the previous SF of each common pp for three CE levels.
 		for (int i = 0; i < 3; ++i)
 		{
 			if(((H_SFN * 10240+frame * 10+subframes+1)%CSS_NPDCCH_period[i])==0)
@@ -328,18 +371,24 @@ int main(int argc, char const *argv[])//design simulation base on different argv
 						scheH_SFN++;
 					}
 				}
-				// LOG("H_SFN:%d,frame:%d,subframes:%d,Schedule DCIs in CSS of next pp(%d~%d) for UL/DL at previous SF of CE %d pp\n",H_SFN,frame,subframes,(frame*10+subframes+1),(frame*10+subframes+1+CSS_NPDCCH_period[i]),i);
-				// system("pause");
-				fout_LOG<<"H_SFN:"<<scheH_SFN<<"frame:"<<scheFrame<<"subframes:"<<scheSubframe<<",Schedule DCIs in CSS of next pp"<<(scheH_SFN * 10240 + scheFrame * 10 + scheSubframe)<<"~"<<endl;
-				CSS_flag=1;
+            	if(LOG_Flag)
+    			{
+					LOG("H_SFN:%d,frame:%d,subframes:%d,Schedule DCIs in CSS of next pp(%d~%d) for UL/DL at previous SF of CE %d pp\n",H_SFN,frame,subframes,(frame*10+subframes+1),(frame*10+subframes+1+CSS_NPDCCH_period[i]),i);
+					// system("pause");
+    			}
+            	if(File_LOG_Flag)
+    			{
+					// fout_LOG<<"H_SFN:"<<scheH_SFN<<" frame:"<<scheFrame<<" subframes:"<<scheSubframe<<",Schedule DCIs in CSS of next pp"<<(scheH_SFN * 10240 + scheFrame * 10 + scheSubframe)<<"~"<<"CE_Level:"<<i<<endl;
+				}
+				// CSS_flag=1;
 				// NB_schedule_RA(frame,subframes,DL_Channel_bitmap,UL_Channel_bitmap);
-				NB_schedule_ulsch(scheH_SFN,scheFrame,scheSubframe,i,MIB_NB_S,SIB1_NB_S,SIB2_NB_S,Msg4_S,UL_Indicaiton,CSS_flag);
 				// NB_schedule_dlsch(frame,subframes,DL_Channel_bitmap);
 			}
 		}
-		for (int i = 0; i < 3; ++i)
+		for (int i = 2; i >= 0; --i)
+		// for (int i = 0; i < 3; ++i)
 		{
-			if(((H_SFN * 10240+frame * 10+subframes+1)%USS_NPDCCH_period[i])==0)
+			if((((H_SFN * 10240+frame * 10+subframes+1)%USS_NPDCCH_period[i])==0)||(H_SFN * 10240+frame * 10+subframes)==0)
 			{
 				uint32_t scheH_SFN=0,scheSubframe=0,scheFrame=0;
 				scheH_SFN=H_SFN;
@@ -355,12 +404,18 @@ int main(int argc, char const *argv[])//design simulation base on different argv
 						scheH_SFN++;
 					}
 				}
-				// LOG("H_SFN:%d,frame:%d,subframes:%d,Schedule DCIs in USS of next pp(%d~%d) for UL/DL at previous SF of CE %d pp\n",H_SFN,frame,subframes,(frame*10+subframes+1),(frame*10+subframes+1+USS_NPDCCH_period[i]),i);
-				// system("pause");
-				fout_LOG<<"H_SFN:"<<scheH_SFN<<"frame:"<<scheFrame<<"subframes:"<<scheSubframe<<",Schedule DCIs in USS of next pp"<<(scheH_SFN * 10240 + scheFrame * 10 + scheSubframe)<<"~"<<"CE_Level:"<<i<<endl;
-				CSS_flag=0;
+	           	if(LOG_Flag)
+    			{
+					LOG("H_SFN:%d,frame:%d,subframes:%d,Schedule DCIs in USS of next pp(%d~%d) for UL/DL at previous SF of CE %d pp\n",H_SFN,frame,subframes,(frame*10+subframes+1),(frame*10+subframes+1+USS_NPDCCH_period[i]),i);
+					// system("pause");
+				}
+            	if(File_LOG_Flag)
+    			{
+					fout_LOG<<"H_SFN:"<<scheH_SFN<<" frame:"<<scheFrame<<" subframes:"<<scheSubframe<<",Schedule DCIs in USS of next pp"<<(scheH_SFN * 10240 + scheFrame * 10 + scheSubframe)<<"~"<<"CE_Level:"<<i<<endl;
+				}
+				// CSS_flag=0;
 				// NB_schedule_RA(frame,subframes,DL_Channel_bitmap,UL_Channel_bitmap);
-				NB_schedule_ulsch(scheH_SFN,scheFrame,scheSubframe,i,MIB_NB_S,SIB1_NB_S,SIB2_NB_S,Msg4_S,UL_Indicaiton,CSS_flag);
+				NB_schedule_ulsch(scheH_SFN,scheFrame,scheSubframe,i,MIB_NB_S,SIB1_NB_S,SIB2_NB_S,Msg4_S,UL_Indicaiton);
 				// NB_schedule_dlsch(frame,subframes,DL_Channel_bitmap);
 			}
 		}
@@ -383,14 +438,21 @@ int main(int argc, char const *argv[])//design simulation base on different argv
 		// if((EndPoint==3)&&((H_SFN * 10240+frame * 10+subframes)==End_Time)) in NB_scheudle_ulsch
 		if(EndPoint==3)
 		{
-			// LOG("UE_Info_List for three CE level are empty\n");
-			// LOG("H_SFN:%d,frame:%d,subframes:%d,End_Time:%d\n",H_SFN,frame,subframes,End_Time);
 			Sum_nprach_resource_U=Sum_nprach_resource_U+get_nprah_resource(End_Time,SIB2_NB_S);
 			Sum_End_Time=Sum_End_Time+End_Time;
-			// LOG("Sum_End_Time:%d,Sum_nprach_resource_U:%d\n",Sum_End_Time,Sum_nprach_resource_U);
-			// LOG("CE0:%d,Sum_Delay[0]:%d,CE1:%d,Sum_Delay[1]:%d,CE2:%d,Sum_Delay[2]:%d",CEi_NumUE[0],Sum_Delay[0],CEi_NumUE[1],Sum_Delay[1],CEi_NumUE[2],Sum_Delay[2]);
+
+        	if(LOG_Flag)
+			{
+				LOG("UE_Info_List for three CE level are empty\n");
+				LOG("H_SFN:%d,frame:%d,subframes:%d,End_Time:%d\n",H_SFN,frame,subframes,End_Time);
+				LOG("Sum_End_Time:%d,Sum_nprach_resource_U:%d\n",Sum_End_Time,Sum_nprach_resource_U);
+				LOG("CE0:%d,Sum_Delay[0]:%d,CE1:%d,Sum_Delay[1]:%d,CE2:%d,Sum_Delay[2]:%d",CEi_NumUE[0],Sum_Delay[0],CEi_NumUE[1],Sum_Delay[1],CEi_NumUE[2],Sum_Delay[2]);
 			// system("pause");
-			fout_LOG<<"UE_Info_List for three CE level are empty"<<endl<<"H_SFN:"<<H_SFN<<"frame:"<<frame<<"subframes:"<<subframes<<"End_Time:"<<End_Time<<endl<<"Sum_End_Time:"<<Sum_End_Time<<"Sum_nprach_resource_U:"<<Sum_nprach_resource_U<<"CE0_NumUE:"<<CEi_NumUE[0]<<"CE1_NumUE:"<<CEi_NumUE[1]<<"CE2_NumUE:"<<CEi_NumUE[2]<<endl;
+			}
+        	if(File_LOG_Flag)
+			{
+				fout_LOG<<"UE_Info_List for three CE level are empty"<<endl<<"H_SFN:"<<H_SFN<<"frame:"<<frame<<"subframes:"<<subframes<<"End_Time:"<<End_Time<<endl<<"Sum_End_Time:"<<Sum_End_Time<<"Sum_nprach_resource_U:"<<Sum_nprach_resource_U<<"CE0_NumUE:"<<CEi_NumUE[0]<<"CE1_NumUE:"<<CEi_NumUE[1]<<"CE2_NumUE:"<<CEi_NumUE[2]<<endl;
+			}
 			subframes=0;
 			frame=0;
 			H_SFN=0;
@@ -402,7 +464,77 @@ int main(int argc, char const *argv[])//design simulation base on different argv
 			UL_Channel.clear();
 			UL_Channel.assign (numTone,0);
 			simTimes++;
-			if(simTimes==10000)	break;
+			if(simTimes==10000)
+			{
+				if(simCase==3)
+				{
+				    T_Average_Delay[0][runCase]=(double)Sum_Delay[0]/CEi_NumUE[0];
+				    T_Average_Delay[1][runCase]=(double)Sum_Delay[1]/CEi_NumUE[1];
+				    T_Average_Delay[2][runCase]=(double)Sum_Delay[2]/CEi_NumUE[2];
+				    T_AvailResource[runCase]=(double)(Sum_End_Time * 12 - Sum_nprach_resource_U);
+					T_OccupiedResource[runCase]=(double)Sum_Occupied_resource__U;
+					// double U=(double)(T_OccupiedResource[runCase]/T_AvailResource[runCase]);
+
+					LOG("index:%d,paloadSize:%d\n",indexDataSize,simDataSize);
+					LOG("T_Average_Delay[0]:%lf,T_Average_Delay[1]:%lf,T_Average_Delay[2]:%lf,U:%lf\n",T_Average_Delay[0][runCase],T_Average_Delay[1][runCase],T_Average_Delay[2][runCase],T_OccupiedResource[runCase]/T_AvailResource[runCase]);
+
+				    resourceUtilization__payloadSize<<simDataSize<<","<<T_OccupiedResource[runCase]/T_AvailResource[runCase]<<endl;
+				    double S_Average_Delay=(T_Average_Delay[0][runCase]+T_Average_Delay[1][runCase]+T_Average_Delay[2][runCase])/3;
+
+				    uint32_t T_M=CEi_NumUE[0]+CEi_NumUE[1]+CEi_NumUE[2];
+				    double S_Throughput=(double)(T_M * simDataSize)/Sum_End_Time;
+
+					AverageDelay_payloadSizeCE0<<simDataSize<<","<<T_Average_Delay[0][runCase]<<","<<S_Average_Delay<<","<<S_Throughput<<endl;
+					AverageDelay_payloadSizeCE1<<simDataSize<<","<<T_Average_Delay[1][runCase]<<endl;
+					AverageDelay_payloadSizeCE2<<simDataSize<<","<<T_Average_Delay[2][runCase]<<endl;
+
+					// uint32_t P_Sum_Delay[2][3]={0};
+					// uint32_t P_CE_NumUE[2][3]={0};
+					// P_Sum_Delay[(*it1).I_payloadSize][(*it1).CE_Level]
+
+					P_delay[0]=(double)P_Sum_Delay[0][0]/P_CE_NumUE[0][0];
+					P_delay[1]=(double)P_Sum_Delay[1][0]/P_CE_NumUE[1][0];
+					P_delay[2]=(double)P_Sum_Delay[0][1]/P_CE_NumUE[0][1];
+					P_delay[3]=(double)P_Sum_Delay[1][1]/P_CE_NumUE[1][1];
+					P_delay[4]=(double)P_Sum_Delay[0][2]/P_CE_NumUE[0][2];
+					P_delay[5]=(double)P_Sum_Delay[1][2]/P_CE_NumUE[1][2];
+
+					// Low_High_Payload_AverageDelay<<P_delay[0]<<","<<P_delay[1]<<","<<P_delay[2]<<","<<P_delay[3]<<","<<P_delay[4]<<","<<P_delay[5]<<endl;
+					Low_High_Payload_AverageDelay<<T_Average_Delay[0][runCase]<<","<<T_Average_Delay[1][runCase]<<","<<T_Average_Delay[2][runCase]<<endl;
+
+
+
+
+					// LOG("Sum_End_Time:%d,Sum_nprach_resource_U:%d,Sum_Occupied_resource__U:%d\n",Sum_End_Time,Sum_nprach_resource_U,Sum_Occupied_resource__U);
+					// LOG("CE0:%d,Sum_Delay[0]:%d,CE1:%d,Sum_Delay[1]:%d,CE2:%d,Sum_Delay[2]:%d\n",CEi_NumUE[0],Sum_Delay[0],CEi_NumUE[1],Sum_Delay[1],CEi_NumUE[2],Sum_Delay[2]);
+    	// 			LOG("T_Average_DelayCE0:%lf,T_Average_DelayCE1:%lf,T_Average_DelayCE2:%lf,T_AvailResource[runCase]:%d,T_OccupiedResource[runCase]:%d,U:%lf\n",T_Average_Delay[0][runCase],T_Average_Delay[1][runCase],T_Average_Delay[2][runCase],T_AvailResource[runCase],T_OccupiedResource[runCase],T_OccupiedResource[runCase]/T_AvailResource[runCase]);
+
+    				fout_LOG<<"OccupiedResource:"<<T_OccupiedResource[runCase]<<"AvailResource:"<<T_AvailResource[runCase]<<endl;
+    				fout_LOG<<"U:"<<T_OccupiedResource[runCase]/T_AvailResource[runCase]<<endl;
+					fout_LOG<<"Sum_End_Time:"<<Sum_End_Time<<",Sum_nprach_resource_U:"<<Sum_nprach_resource_U<<",Sum_Occupied_resource__U:"<<Sum_Occupied_resource__U<<endl;
+
+
+					for (int i = 0; i < 3; ++i)
+					{
+						Sum_Delay[i]=0;
+						CEi_NumUE[i]=0;
+					}
+					Sum_End_Time=0;
+					Sum_nprach_resource_U=0;
+					Sum_Occupied_resource__U=0;
+					T_Average_Delay[0][runCase]=0;
+					T_Average_Delay[1][runCase]=0;
+					T_Average_Delay[2][runCase]=0;
+					T_AvailResource[runCase]=0;
+					T_OccupiedResource[runCase]=0;
+					simTimes=0;
+					++indexDataSize;
+					// ++runCase;
+					if(indexDataSize==10)	break;
+					// if(runCase==3)	break;
+					continue;
+				}
+			}
 			else continue;
 		}
 		// if((H_SFN * 1024+frame * 10+subframes)%5000==0)
@@ -425,13 +557,15 @@ int main(int argc, char const *argv[])//design simulation base on different argv
 		// system("pause");
 	}
 	// system("pause");
-	totalNumUE=TotalNumUE[runCase];
-    T_Average_Delay[0][runCase]=Sum_Delay[0]/CEi_NumUE[0];
-    T_Average_Delay[1][runCase]=Sum_Delay[1]/CEi_NumUE[1];
-    T_Average_Delay[2][runCase]=Sum_Delay[2]/CEi_NumUE[2];
-    T_AvailResource[runCase]=(double)((Sum_End_Time * 12) - Sum_nprach_resource_U);
-	T_OccupiedResource[runCase]=(double)(Sum_Occupied_resource__U);
-    LOG("End_Time:%d,Total # of UE:%d,T_Average_DelayCE0:%d,T_Average_DelayCE1:%d,T_Average_DelayCE2:%d,T_AvailResource[runCase]:%lf,T_OccupiedResource[runCase]:%lf,U:%lf\n",Sum_End_Time,totalNumUE,T_Average_Delay[0][runCase],T_Average_Delay[1][runCase],T_Average_Delay[2][runCase],T_AvailResource[runCase],T_OccupiedResource[runCase],T_OccupiedResource[runCase]/T_AvailResource[runCase]);
+	// totalNumUE=TotalNumUE[runCase];
+	if(simCase!=3)
+	{
+	    T_Average_Delay[0][runCase]=Sum_Delay[0]/CEi_NumUE[0];
+	    T_Average_Delay[1][runCase]=Sum_Delay[1]/CEi_NumUE[1];
+	    T_Average_Delay[2][runCase]=Sum_Delay[2]/CEi_NumUE[2];
+	    T_AvailResource[runCase]=(Sum_End_Time * 12) - Sum_nprach_resource_U;
+		T_OccupiedResource[runCase]=Sum_Occupied_resource__U;
+    }
     // system("pause");
 	if(simCase==1)
 	{
@@ -441,8 +575,8 @@ int main(int argc, char const *argv[])//design simulation base on different argv
 		 //    resourceUtilization_pp_same<<totalNumUE<<","<<T_OccupiedResource[runCase]/T_AvailResource[runCase]<<endl;
 			// resourceUtilization_pp_same.close();
 			// AverageDelay_pp_same.close();
-
-		    resourceUtilization_pp_same<<totalNumUE<<","<<T_OccupiedResource[runCase]/T_AvailResource[runCase]<<endl;
+			totalNumUE=TotalNumUE[runCase];
+		    resourceUtilization_pp_same<<totalNumUE<<","<<(double)T_OccupiedResource[runCase]/T_AvailResource[runCase]<<endl;
 			resourceUtilization_pp_same.close();
 
 			AverageDelay_pp_sameCE0<<totalNumUE<<","<<T_Average_Delay[0][runCase]<<endl;
@@ -458,6 +592,7 @@ int main(int argc, char const *argv[])//design simulation base on different argv
 		}
 		else if(highOfferedLoad==1)
 		{
+			totalNumUE=TotalNumUE_H[runCase];
 		    resourceUtilization_pp_same_H<<totalNumUE<<","<<T_OccupiedResource[runCase]/T_AvailResource[runCase]<<endl;
 			resourceUtilization_pp_same_H.close();
 
@@ -473,6 +608,7 @@ int main(int argc, char const *argv[])//design simulation base on different argv
 	{
 		if(highOfferedLoad==0)
 		{
+			totalNumUE=TotalNumUE[runCase];
 		 //    AverageDelay_pp_not_same_H<<totalNumUE<<","<<T_Average_Delay[runCase]<<endl;
 		 //    resourceUtilization_pp_not_same_H<<totalNumUE<<","<<T_OccupiedResource[runCase]/T_AvailResource[runCase]<<endl;
 			// resourceUtilization_pp_not_same_H.close();
@@ -489,6 +625,7 @@ int main(int argc, char const *argv[])//design simulation base on different argv
 		}
 		else if(highOfferedLoad==1)
 		{
+			totalNumUE=TotalNumUE_H[runCase];
 		    resourceUtilization_pp_not_same_H<<totalNumUE<<","<<T_OccupiedResource[runCase]/T_AvailResource[runCase]<<endl;
 			resourceUtilization_pp_not_same_H.close();
 
@@ -500,6 +637,22 @@ int main(int argc, char const *argv[])//design simulation base on different argv
 			AverageDelay_pp_not_sameCE2_H.close();
 		}
 	}
+	else if(simCase==3)
+	{
+		// totalNumUE=TotalNumUE_H[runCase];
+	 //    resourceUtilization__payloadSize<<simDataSize<<","<<T_OccupiedResource[runCase]/T_AvailResource[runCase]<<endl;
+		resourceUtilization__payloadSize.close();
+		// AverageDelay_payloadSizeCE0<<simDataSize<<","<<T_Average_Delay[0][runCase]<<endl;
+		// AverageDelay_payloadSizeCE1<<simDataSize<<","<<T_Average_Delay[1][runCase]<<endl;
+		// AverageDelay_payloadSizeCE2<<simDataSize<<","<<T_Average_Delay[2][runCase]<<endl;
+		AverageDelay_payloadSizeCE0.close();
+		AverageDelay_payloadSizeCE1.close();
+		AverageDelay_payloadSizeCE2.close();
+
+		Low_High_Payload_AverageDelay.close();
+	}
+    // LOG("End_Time:%d,Total # of UE:%d,T_Average_DelayCE0:%d,T_Average_DelayCE1:%d,T_Average_DelayCE2:%d,T_AvailResource[runCase]:%lf,T_OccupiedResource[runCase]:%lf,U:%lf\n",Sum_End_Time,totalNumUE,T_Average_Delay[0][runCase],T_Average_Delay[1][runCase],T_Average_Delay[2][runCase],T_AvailResource[runCase],T_OccupiedResource[runCase],T_OccupiedResource[runCase]/T_AvailResource[runCase]);
+
 	fout_LOG.close();
 	t = clock() - t;
 	LOG("Computing Time:%f seconds\n",((float)t)/CLOCKS_PER_SEC);

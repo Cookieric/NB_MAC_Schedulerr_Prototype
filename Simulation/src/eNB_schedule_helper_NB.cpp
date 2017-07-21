@@ -17,7 +17,9 @@ using namespace std;
 
 const uint32_t TBS_SIB1[16]={208,208,208,328,328,328,440,440,440,680,680,680,0,0,0};//0:Reserved
 int PHR_table[3][2]={{2,3},{1,2},{0,1}};
-uint32_t DV_table[15]={0,10,14,19,26,36,49,67,91,125,171,234,321,768,1500};//>1500, BS assume 1500
+uint32_t DV_table[16]={0,10,14,19,26,36,49,67,91,125,171,234,321,768,1500,1500};//>1500, BS assume 1500, Map to highest
+uint32_t DV1_table[16]={0,5,12,17,23,31,43,58,79,108,148,203,278,545,1134,1500};//Map to medium
+uint32_t DV2_table[16]={0,1,11,15,20,27,37,50,68,92,126,172,235,322,769,1500};//Map to lowest
 
 uint32_t UL_TBS_Table[13][8]={{16,32,56,88,120,152,208,256},
 {24,56,88,144,176,208,256,344},
@@ -34,12 +36,23 @@ uint32_t UL_TBS_Table[13][8]={{16,32,56,88,120,152,208,256},
 {208,440,680,1000,0,0,0,0}};
 
 
-uint32_t BSR_table[63]={0,10,12,14,17,19,22,26,31,36,42,49,57,67,78,91,
+uint32_t BSR_table[64]={0,10,12,14,17,19,22,26,31,36,42,49,57,67,78,91,
 107,125,146,171,200,234,274,321,376,440,515,603,706,826,967,
 1132,1326,1552,1817,2127,2490,2915,3413,3995,4677,5476,6411,
 7505,8787,10287,12043,14099,16507,19325,22624,26487,31009,
-36304,42502,49759,58255,68201,79846,93479,109439,128125,150000};//>150000, BS assume 150000
+36304,42502,49759,58255,68201,79846,93479,109439,128125,150000,150000};//>150000, BS assume 150000, Map to highest
 
+uint32_t BSR1_table[64]={0,5,11,13,16,18,21,24,29,34,39,46,53,62,73,85,
+99,116,136,159,186,217,254,298,349,408,478,559,655,766,897,
+1050,1229,1439,1685,1972,2309,2703,3164,3704,4336,5077,5944,
+6958,8146,9537,11165,13071,15303,17916,20975,24556,28748,
+33657,39403,46131,54007,63228,74024,86663,101459,118782,139063,150000};//Map to medium
+
+uint32_t BSR2_table[64]={0,1,11,13,15,18,20,23,27,32,37,43,50,58,68,79,
+92,108,126,147,172,201,235,275,322,377,441,516,604,707,827,
+968,1133,1327,1553,1818,2128,2491,2916,3414,3996,4678,5477,
+6412,7506,8788,10288,12044,14100,16508,19326,22625,26488,
+31010,36305,42503,49760,58256,68202,79847,93480,109440,128126,150000};//Map to lowest
 extern uint32_t Cell_id;
 extern uint32_t H_SFN;
 extern uint32_t n_pp;//number of  NPDCCH_period
@@ -47,6 +60,8 @@ extern uint32_t n_pp;//number of  NPDCCH_period
 extern uint32_t NPDCCH_period[3];
 extern char channel_N[L_channels][10];
 
+extern uint8_t File_LOG_Flag;
+extern uint8_t LOG_Flag;
 
 
 // /*Move to sche_pro_NB C header files*/
@@ -79,11 +94,19 @@ bool compareMyType4 (const HI_DCI0_request_t &a, const HI_DCI0_request_t &b)
 
 bool compareMyType3 (const UE_TEMPLATE_NB &a, const UE_TEMPLATE_NB &b)
 {
-	return a.round > b.round;
+	// return a.round > b.round;
+	if(a.first_Arrival_Time!=b.first_Arrival_Time)	return a.first_Arrival_Time < b.first_Arrival_Time;
+	else if(a.round!=b.round) return a.round > b.round;
+	// else if (a.UL_Buffer_Size != b.UL_Buffer_Size) return a.UL_Buffer_Size < b.UL_Buffer_Size;
+
+
 	// if(a.round!=b.round)	return a.round > b.round;
+	// else	return a.UL_Buffer_Size < b.UL_Buffer_Size;
+	// else	return a.UL_Buffer_Size > b.UL_Buffer_Size;
 	// else	return a.CE_Level < b.CE_Level;
+	//PHR/MCS...
 }
-uint8_t get_aggregation(uint32_t CE_Level,uint32_t T_SearchSpace,uint32_t R)
+uint32_t get_aggregation(uint32_t CE_Level,uint32_t T_SearchSpace,uint32_t R)
 {
 	//It could choose 1 or 2 base on channel quality, CE 0 has best channel quality
 	//If channel quality is low use a higher aggregation level
@@ -93,7 +116,7 @@ uint8_t get_aggregation(uint32_t CE_Level,uint32_t T_SearchSpace,uint32_t R)
 }
 
 extern vector<int> Sfreq;
-int get_nprah_resource(int End_Time,SIB2_NB & SIB2_NB_S)
+uint32_t get_nprah_resource(int End_Time,SIB2_NB & SIB2_NB_S)
 {
 	// FreqPosition belong to {0,4,8,12,16,20,24,28,32,36,40,44}
 	int nprah_resource=0;
@@ -183,8 +206,14 @@ int get_TBS_UL(uint32_t mcs,uint32_t multi_tone,uint32_t & Iru,bool & maxIru)
 {
 	int TBS;
 	uint32_t I_TBS=get_I_TBS(mcs,multi_tone);
+	// LOG("I_TBS:%d,Iru:%d\n",I_TBS,Iru);
+	if(Iru>7)
+	{
+		--Iru;
+		maxIru=true;
+	}
 	TBS=UL_TBS_Table[I_TBS][Iru];
-	if((TBS==0)||(Iru>7))
+	if(TBS==0)
 	{
 		--Iru;
 		maxIru=true;
@@ -509,11 +538,22 @@ uint8_t DCIs_resource_determinaiton(uint32_t scheH_SFN,uint32_t scheFrame,uint32
 
 uint32_t get_CE_level()
 {
-	double PC[3]={0.6,0.2,0};//CE leve(0,1,2)-->(40%,40%,20%), ratio of devices in period_UL report.
-	double pc=uniform_rng();
-	if(pc>PC[0])	return 0;
-	else if((pc<PC[0])&&(pc>PC[1]))	return 1;
-	else if((pc>=PC[2])&&(pc<PC[1]))	return 2;
+	// double PC[3]={0.6,0.2,0};//CE leve(0,1,2)-->(40%,40%,20%), ratio of devices in period_UL report.
+	// double PC[3]={0.66,0.33,0};//CE leve(0,1,2)-->(33%,33%,33%), ratio of devices in period_UL report.
+	// double pc=uniform_rng();
+	// if(pc>=PC[0])	return 0;
+	// else if((pc<PC[0])&&(pc>=PC[1]))	return 1;
+	// else if((pc>=PC[2])&&(pc<PC[1]))	return 2;
+	// else
+	// {
+	// 	LOG("Abnormal probability in get_CE_level()\n");
+	// 	system("pause");
+	// 	exit(1);
+	// }
+	uint32_t pc=rand()%3;
+	if(pc==0)	return pc;
+	else if(pc==1)	return pc;
+	else if(pc==2)	return pc;
 	else
 	{
 		LOG("Abnormal probability in get_CE_level()\n");
@@ -553,29 +593,80 @@ double pareto_dist(double scale, double shape)
   // printf("Pareto Random Nb = %lf (scale=%.2f, shape=%.2f)\n", pareto_rn,scale,shape);
   return pareto_rn;
 }
+//Simulation Case 3
+extern uint32_t simDataSize;
+extern uint32_t DataSize[10];//{20,40,60,80,100,120,140,160,180,200...};
+extern uint32_t indexDataSize;
+
+extern ofstream fout_LOG;
+
+uint32_t get_PHR_index()
+{
+	uint32_t pc=rand()%4;
+	uint32_t PHR=0;
+	switch(pc)
+	{
+		case 0:
+			PHR=pc;
+			break;
+		case 1:
+			PHR=pc;
+			break;
+		case 2:
+			PHR=pc;
+			break;
+		case 3:
+			PHR=pc;
+			break;
+	}
+	return	PHR;
+}
 
 int get_DV_index(UE_TEMPLATE_NB & UE_Info)//UE function: payload size follow pareto distri.
 {
-	double payloadSize=pareto_dist(20,2.5);//scale=20, Shape=2.5, gen_packet(traffic_model)
-	if(payloadSize>200)
-	{
-		payloadSize=200;
-		// printf("pareto_dist[%d]:%lf\n", i,payloadSize);
-	}
-	else
-		payloadSize=floor(payloadSize+0.5);
-	// printf("payloadSize:%.2lf\n",payloadSize);
+	// double payloadSize=pareto_dist(20,2.5);//scale=20, Shape=2.5, gen_packet(traffic_model)
+	uint32_t payloadSize=DataSize[indexDataSize];
+
+
+	/*No MAR traffic model*/
+	// if(payloadSize>200)
+	// {
+	// 	payloadSize=200;
+	// 	// printf("pareto_dist[%d]:%lf\n", i,payloadSize);
+	// }
+	// else	payloadSize=floor(payloadSize+0.5);
+
+	simDataSize=payloadSize;
+
+	/*No MAR traffic model*/
+	// if(LOG_Flag)	printf("payloadSize:%d\n",payloadSize);
+	// if(File_LOG_Flag)	fout_LOG<<"payloadSize:"<<payloadSize<<endl;
+	// system("pause");
+
 	UE_Info.payloadSize=payloadSize;
-	for (int i = 0; i < sizeof(DV_table)/sizeof(uint32_t); ++i)
+	if(UE_Info.payloadSize>100)	UE_Info.I_payloadSize=1;
+	else	UE_Info.I_payloadSize=0;
+
+	for (int i = 0; i < sizeof(BSR_table)/sizeof(uint32_t)-1; ++i)
 	{
-		if((payloadSize<=DV_table[i]) && (payloadSize>=0))	return	i;
+		if((payloadSize<=BSR_table[i]) && (payloadSize>=0))
+		{
+			return	i;
+		}
 	}
-	return 14; // Maximum size in DV table
+	if(payloadSize<=0)	return 0;
+	return 63;
+
+	// for (int i = 0; i < sizeof(DV_table)/sizeof(uint32_t)-1; ++i)
+	// {
+	// 	if((payloadSize<=DV_table[i]) && (payloadSize>=0))	return	i;
+	// }
+	// return 15; // Maximum size in DV table
 }
 
 int get_BSR_index(int payloadSize)
 {
-	for (int i = 0; i < sizeof(BSR_table)/sizeof(uint32_t); ++i)
+	for (int i = 0; i < sizeof(BSR_table)/sizeof(uint32_t)-1; ++i)
 	{
 		if((payloadSize<=BSR_table[i]) && (payloadSize>=0))
 		{
@@ -586,7 +677,7 @@ int get_BSR_index(int payloadSize)
 	return 63;
 }
 
-uint8_t get_CRC_indication()
+uint32_t get_CRC_indication()
 {
 	double pCRC=uniform_rng();
 	double Ps=0.9;
@@ -624,7 +715,9 @@ extern uint8_t runCase;//0,1,2,3,4,5,6,7,8,9
 extern uint8_t highOfferedLoad;
 int new_num_UE=0;
 int UE_id=0;
-extern ofstream fout_LOG;
+
+extern uint8_t mappingBufferSize;
+uint32_t Sum_Occupied_resource__U=0;
 
 uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 {
@@ -634,13 +727,9 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
     // ctime=H_SFN * 10240+frame * 10+subframes; // calculate the current time
     if(((H_SFN * 10240+frame * 10+subframes)%1000)==0)//New UE's Msg3 arrive with fixed Inter aiival time
     {
-    	// LOG("New UEs' Msg3 arrive at frame:%d,subframes:%d\n",frame,subframes);
-		fout_LOG<<"New UEs' Msg3 arrive at "<<"H_SFN:"<<H_SFN<<"frame:"<<frame<<"subframes:"<<subframes<<endl;
-    	// static int UE_id=0;
     	if(highOfferedLoad==0)	new_num_UE=6;
-    	else if(highOfferedLoad==1)	new_num_UE=60;
-    	// LOG("new_num_UE:%d\n",new_num_UE);
-    	// system("pause");
+    	else if(highOfferedLoad==1)	new_num_UE=10;
+
     	totalNumUE=totalNumUE+new_num_UE;
     	if(highOfferedLoad==0)
     	{
@@ -660,9 +749,19 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 	    		simCtrl=false;
 	    	}
 	    }
-	    // LOG("totalNumUE:%d\n",totalNumUE);
-	    // system("pause");
-	    fout_LOG<<"totalNumUE:"<<totalNumUE<<endl;
+    	if(LOG_Flag)
+    	{
+    		LOG("New UEs' Msg3 arrive at frame:%d,subframes:%d\n",frame,subframes);
+ 		   	LOG("new_num_UE:%d\n",new_num_UE);
+ 		   	LOG("totalNumUE:%d\n",totalNumUE);
+    		// system("pause");
+    	}
+    	if(File_LOG_Flag)
+    	{
+			fout_LOG<<"New UEs' Msg3 arrive at "<<"H_SFN:"<<H_SFN<<"frame:"<<frame<<"subframes:"<<subframes<<endl;
+			fout_LOG<<"totalNumUE:"<<totalNumUE<<endl;
+		    // system("pause");
+    	}
     	// int *ptr = &var;//avoid copy constructor action
     	// int &ptr = var;//avoid copy constructor action
     	// list<UE_TEMPLATE_NB> & UE_Info_List=UL_Indicaiton.UL_UE_Info_List;
@@ -674,14 +773,16 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 	    	{
 	    		UE_TEMPLATE_NB UL_UE_Info={0};
 	    		UL_UE_Info.UE_id=UE_id;
-	    		UL_UE_Info.CRC_indication=get_CRC_indication();
+	    		// UL_UE_Info.CRC_indication=get_CRC_indication();
 	    		UL_UE_Info.round=1;
 	    		UL_UE_Info.oldNDI_UL=0;
 	    		UL_UE_Info.CE_Level=get_CE_level();
 	    		// UL_UE_Info.CE_Level=0;
-	    		UL_UE_Info.ul_active=true;
+	    		// UL_UE_Info.ul_active=true;
+	    		//Assume RA procedure succeed
+	    		UL_UE_Info.CRC_indication=0;
 	    		UL_UE_Info.configured=false;
-	    		UL_UE_Info.schedMsg3=false;
+	    		// UL_UE_Info.schedMsg3=false;
 	    		UL_UE_Info.schedStatus=false;
 	    		UL_UE_Info.sche_Msg5_Time=-1;
 	    		UL_UE_Info.multi_tone=0;
@@ -694,10 +795,12 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 	    		UL_UE_Info.UL_Buffer_Size=-1;
 	    		UL_UE_Info.first_Arrival_Time=H_SFN * 10240+frame * 10+subframes;
 	    		UL_UE_Info.next_Arrival_Time=-1;
+	    		// UL_UE_Info.next_Arrival_Time=UL_UE_Info.first_Arrival_Time;
 	    		UL_UE_Info.allocate_Buffer_Size=1;
 	    		UL_UE_Info.mcs=-1;
 	    		UL_UE_Info.Qm=-1;
 	    		// UL_UE_Info.remaining_Buffer_Sizes=-1;
+	    		// UL_UE_Info.Resource=0;
 	    		UL_UE_Info.startFreqPos=-1;
 	    		UL_UE_Info.num_tone=-1;
 	    		UL_UE_Info.num_UL_Slot=-1;
@@ -716,12 +819,22 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 		    	{
 		            if(((*it1).CRC_indication==0)&&((*it1).configured==false))//Get the time of schedule Msg5
 		            {
+		            	(*it1).configured=true;
+		            	(*it1).sche_Msg5_Time=0;
 		            	//DCI N0-->Msg4-->ACK...within a pp
-		                (*it1).sche_Msg5_Time=(*it1).first_Arrival_Time+8 * 4+8 * 4 *(*it1).CE_Level+64;
-		        		(*it1).PHR=PHR_table[(*it1).CE_Level][(*it1).multi_tone];
+		                // (*it1).sche_Msg5_Time=(*it1).first_Arrival_Time+8 * 4+8 * 4 *(*it1).CE_Level+64;
+		        		// (*it1).PHR=PHR_table[(*it1).CE_Level][(*it1).multi_tone];
+		        		(*it1).PHR=get_PHR_index();
 		        		UE_TEMPLATE_NB *j = &*it1;
-						(*it1).DV=get_DV_index(*j);
-						(*it1).UL_Buffer_Size=DV_table[(*it1).DV];
+		        		/*Disable DV, First BSR done in get_DV_index()*/
+						(*it1).BSR=get_DV_index(*j);
+						// if(mappingBufferSize==0)	(*it1).UL_Buffer_Size=DV_table[(*it1).DV];
+						// else if(mappingBufferSize==1)	(*it1).UL_Buffer_Size=DV1_table[(*it1).DV];
+						// else if(mappingBufferSize==2)	(*it1).UL_Buffer_Size=DV2_table[(*it1).DV];
+		    			// (*it1).BSR=get_BSR_index((*it1).payloadSize);
+						if(mappingBufferSize==0)	(*it1).UL_Buffer_Size=BSR_table[(*it1).BSR];
+						else if(mappingBufferSize==1)	(*it1).UL_Buffer_Size=BSR1_table[(*it1).BSR];
+						else if(mappingBufferSize==2)	(*it1).UL_Buffer_Size=BSR2_table[(*it1).BSR];
 						// if((*it1).UL_Buffer_Size>200)	(*it1).UL_Buffer_Size=200;
 		            }
 		            else if(((*it1).CRC_indication==1)&&((*it1).configured==false))//Msg3 retransmission
@@ -729,8 +842,15 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 		                //Msg3 retransmission arrriva at next_Arrival_Time base on NB_scheudle_ulsch
 		                (*it1).round++;
 		            }
-		    		// LOG("CE_Level:%d,UE_id:%d,CRC_indication:%d,round:%d,multi_tone:%d,PHR:%d,DV:%d,BSR:%d,UL_Buffer_Size:%d,first_Arrival_Time:%d,sche_Msg5_Time:%d,payloadSize:%d\n",(*it1).CE_Level,(*it1).UE_id,(*it1).CRC_indication,(*it1).round,(*it1).multi_tone,(*it1).PHR,(*it1).DV,(*it1).BSR,(*it1).UL_Buffer_Size,(*it1).first_Arrival_Time,(*it1).sche_Msg5_Time,(*it1).payloadSize);
-		    		// system("pause");
+                	if(LOG_Flag)
+    				{
+		    			LOG("CE_Level:%d,UE_id:%d,CRC_indication:%d,round:%d,multi_tone:%d,PHR:%d,DV:%d,BSR:%d,UL_Buffer_Size:%d,first_Arrival_Time:%d,sche_Msg5_Time:%d,payloadSize:%d\n",(*it1).CE_Level,(*it1).UE_id,(*it1).CRC_indication,(*it1).round,(*it1).multi_tone,(*it1).PHR,(*it1).DV,(*it1).BSR,(*it1).UL_Buffer_Size,(*it1).first_Arrival_Time,(*it1).sche_Msg5_Time,(*it1).payloadSize);
+		    			// system("pause");
+		    		}
+		    		if(File_LOG_Flag)
+		    		{
+		    			fout_LOG<<"CE_Level:"<<(*it1).CE_Level<<",UE_id:"<<(*it1).UE_id<<",CRC_indication:"<<(*it1).CRC_indication<<",round:"<<(*it1).round<<",multi_tone:"<<",PHR:"<<(*it1).PHR<<",DV:"<<(*it1).DV<<",BSR:"<<(*it1).BSR<<",UL_Buffer_Size:"<<(*it1).UL_Buffer_Size<<",first_Arrival_Time:"<<(*it1).first_Arrival_Time<<",sche_Msg5_Time:"<<(*it1).sche_Msg5_Time<<",payloadSize:"<<(*it1).payloadSize<<endl;
+		    		}
 		        }
 			}
 		}
@@ -742,17 +862,29 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 		// LOG("UL_UE_Info_List[%d].size:%d\n",i,UE_Info_List.size());
     	for (it1=UE_Info_List.begin(); it1!=UE_Info_List.end();++it1)
     	{
-	        if((H_SFN * 10240+frame * 10+subframes)==(*it1).sche_Msg5_Time)
-	        {
-	            (*it1).configured=true;//Receive ACK for Msg4, Ready to schedule DCI N0 for Msg5 at next pp
-	            fout_LOG<<"[UE Arrival]"<<"CE_Level:"<<(*it1).CE_Level<<" UE_id:"<<(*it1).UE_id<<" FirstMsg3ArrivalTime:"<<(*it1).first_Arrival_Time<<" ACKforMsg4Time:"<<(*it1).sche_Msg5_Time<<"configured:"<<(*it1).configured<<endl;
-	        }
-	    	if((H_SFN * 10240+frame * 10+subframes)==(*it1).next_Arrival_Time)//next_Arrival_Time=BSR arrival time
+	      //   if((H_SFN * 10240+frame * 10+subframes)==(*it1).sche_Msg5_Time)
+	      //   {
+	      //       (*it1).configured=true;//Receive ACK for Msg4, Ready to schedule DCI N0 for Msg5 at next pp
+       //      	if(File_LOG_Flag)
+    			// {
+	      //       	fout_LOG<<"[ACK for Msg4 Arrive]"<<"CE_Level:"<<(*it1).CE_Level<<" UE_id:"<<(*it1).UE_id<<" FirstMsg3ArrivalTime:"<<(*it1).first_Arrival_Time<<" ACKforMsg4Time:"<<(*it1).sche_Msg5_Time<<"configured:"<<(*it1).configured<<endl;
+	      //       }
+	      //   }
+	    	if((H_SFN * 10240+frame * 10+subframes)==((*it1).next_Arrival_Time))//Next BSR arrival time
 	    	{
+	    		if((*it1).next_Arrival_Time==-1)
+	    		{
+	    			LOG("UL_UE_Info.next_Arrival_Time==-1, Abnormal\n");
+	    			system("pause");
+	    			exit(1);
+	    		}
 	    		// UE_TEMPLATE_NB UL_UE_Info;
 	    		// list<UE_TEMPLATE_NB> % UE_Info_List = UL_Indicaiton.UL_UE_Info_List;
 	            if((*it1).configured==false)
 	            {
+	            	LOG("In ulsch_ind(), configured==false, Abnormal\n");
+	            	system("pause");
+	            	exit(1);
 	                (*it1).CRC_indication=get_CRC_indication();
 	                // (*it1).round=1; // round++
 	                // (*it1).round++;
@@ -760,20 +892,28 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 	                // (*it1).UL_Buffer_Size=BSR_table[(*it1).BSR];
 	                if((*it1).CRC_indication==1)//// Msg3 retransmission
 	                {
-	                	fout_LOG<<"[UE Arrival]"<<" CE_Level:"<<(*it1).CE_Level<<" UE_id:"<<(*it1).UE_id<<" FirstMsg3ArrivalTime:"<<(*it1).first_Arrival_Time<<" ACKforMsg4Time:"<<(*it1).sche_Msg5_Time<<endl;
+    	            	if(File_LOG_Flag)
+    					{
+	                		fout_LOG<<"[UE Arrival]"<<" CE_Level:"<<(*it1).CE_Level<<" UE_id:"<<(*it1).UE_id<<" FirstMsg3ArrivalTime:"<<(*it1).first_Arrival_Time<<" ACKforMsg4Time:"<<(*it1).sche_Msg5_Time<<endl;
+	                	}
 	                    (*it1).round++; // trigger time recalculation
 	                }
 	                else
 	                {
 	                	(*it1).round=1;
-	                	(*it1).schedMsg3=false;//disable Msg3 flag
+	                	// (*it1).schedMsg3=false;//disable Msg3 flag
 		                (*it1).sche_Msg5_Time=(*it1).next_Arrival_Time+8 * 4+8 * 4 *(*it1).CE_Level+64;
-		        		(*it1).PHR=PHR_table[(*it1).CE_Level][(*it1).multi_tone];
+		        		// (*it1).PHR=PHR_table[(*it1).CE_Level][(*it1).multi_tone];
+		        		(*it1).PHR=get_PHR_index();
 						UE_TEMPLATE_NB *j = &*it1;
 						(*it1).DV=get_DV_index(*j);
-						(*it1).UL_Buffer_Size=DV_table[(*it1).DV];
-						fout_LOG<<"[UE Arrival]"<<"CE_Level:"<<(*it1).CE_Level<<" UE_id:"<<(*it1).UE_id<<" FirstMsg3ArrivalTime:"<<(*it1).first_Arrival_Time<<" ACKforMsg4Time:"<<(*it1).sche_Msg5_Time<<endl;
-						// if((*it1).UL_Buffer_Size>200)	(*it1).UL_Buffer_Size=200;
+						if(mappingBufferSize==0)	(*it1).UL_Buffer_Size=DV_table[(*it1).DV];
+						else if(mappingBufferSize==1)	(*it1).UL_Buffer_Size=DV1_table[(*it1).DV];
+						else if(mappingBufferSize==2)	(*it1).UL_Buffer_Size=DV2_table[(*it1).DV];
+    	            	if(File_LOG_Flag)
+    					{
+							fout_LOG<<"[UE Arrival]"<<"CE_Level:"<<(*it1).CE_Level<<" UE_id:"<<(*it1).UE_id<<" FirstMsg3ArrivalTime:"<<(*it1).first_Arrival_Time<<" ACKforMsg4Time:"<<(*it1).sche_Msg5_Time<<endl;
+						}
 	                }
 	            }
 	            else//Msg5,UL Info
@@ -785,21 +925,38 @@ uint32_t Ulsch_ind(frame_t frame,sub_frame_t subframes,UL_IND_t & UL_Indicaiton)
 	                if((*it1).CRC_indication==1)//Ready to rescheudle Msg5, ULInfo
 	                {
 	                	(*it1).BSR=get_BSR_index((*it1).payloadSize);
+						if(mappingBufferSize==0)	(*it1).UL_Buffer_Size=BSR_table[(*it1).BSR];
+						else if(mappingBufferSize==1)	(*it1).UL_Buffer_Size=BSR1_table[(*it1).BSR];
+						else if(mappingBufferSize==2)	(*it1).UL_Buffer_Size=BSR2_table[(*it1).BSR];
 	                    (*it1).round++;
 	                }
 	                else
 	                {
+	                	// Sum_Occupied_resource__U=Sum_Occupied_resource__U+(*it1).Resource;
+	                	// (*it1).Resource=0;
 	                	(*it1).round=1;
 		    			(*it1).DV=-1;//When receive BSR, clear DV
 		    			// (*it1).BSR=get_BSR_index((*it1).remaining_Buffer_Sizes);
 		    			//Update UE UL buffer size base on UL grant(DCI format N0)
-		    			(*it1).payloadSize=(*it1).payloadSize-(*it1).allocate_Buffer_Size;
+		    			//consider BSR subheader(2)+ subheader for MAC PDU(1-3)
+		    			(*it1).payloadSize=(*it1).payloadSize-(*it1).allocate_Buffer_Size+2+2;
+		    			// (*it1).allocate_Buffer_Size=0;
 		    			(*it1).BSR=get_BSR_index((*it1).payloadSize);
-		    			(*it1).UL_Buffer_Size=BSR_table[(*it1).BSR];
+						if(mappingBufferSize==0)	(*it1).UL_Buffer_Size=BSR_table[(*it1).BSR];
+						else if(mappingBufferSize==1)	(*it1).UL_Buffer_Size=BSR1_table[(*it1).BSR];
+						else if(mappingBufferSize==2)	(*it1).UL_Buffer_Size=BSR2_table[(*it1).BSR];
 	                }
 	            }
-	    		// LOG("CE_Level:%d,UE_id:%d,CRC_indication:%d,round:%d,multi_tone:%d,PHR:%d,DV:%d,BSR:%d,UL_Buffer_Size:%d,first_Arrival_Time:%d,sche_Msg5_Time:%d,payloadSize:%d\n",(*it1).CE_Level,(*it1).UE_id,(*it1).CRC_indication,(*it1).round,(*it1).multi_tone,(*it1).PHR,(*it1).DV,(*it1).BSR,(*it1).UL_Buffer_Size,(*it1).first_Arrival_Time,(*it1).sche_Msg5_Time,(*it1).payloadSize);
-				// system("pause");
+            	if(LOG_Flag)
+    			{
+	    			LOG("CE_Level:%d,UE_id:%d,CRC_indication:%d,round:%d,multi_tone:%d,PHR:%d,DV:%d,BSR:%d,UL_Buffer_Size:%d,first_Arrival_Time:%d,sche_Msg5_Time:%d,payloadSize:%d\n",(*it1).CE_Level,(*it1).UE_id,(*it1).CRC_indication,(*it1).round,(*it1).multi_tone,(*it1).PHR,(*it1).DV,(*it1).BSR,(*it1).UL_Buffer_Size,(*it1).first_Arrival_Time,(*it1).sche_Msg5_Time,(*it1).payloadSize);
+					// system("pause");
+	    		}
+            	if(File_LOG_Flag)
+    			{
+					fout_LOG<<"[UE with BSR Arrival]"<<"CE_Level:"<<(*it1).CE_Level<<",UE_id:"<<(*it1).UE_id<<",CRC_indication:"<<(*it1).CRC_indication<<",round:"<<(*it1).round<<",ArrivalTime:"<<(*it1).next_Arrival_Time<<"UL grant(Byte):"<<(*it1).allocate_Buffer_Size<<",payloadSize:"<<(*it1).payloadSize<<",BSR:"<<(*it1).BSR<<",UL_Buffer_Size:"<<(*it1).UL_Buffer_Size<<" FirstMsg3ArrivalTime:"<<(*it1).first_Arrival_Time<<" ACKforMsg4Time:"<<(*it1).sche_Msg5_Time<<endl;
+					// system("pause");
+	    		}
 	        }
 	    }
     }
