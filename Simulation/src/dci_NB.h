@@ -127,8 +127,8 @@ typedef struct DCIFormat2_Pag DCIFormat2_Pag_t;
 #define sizeof_DCIFormat2_Pag_t 15
 
 typedef struct DCI_UL_PDU{
-	uint8_t NCCE_index;//NCCE index used to send the DCI Value: 0 → 1
-  	uint8_t Aggregation_L;//The aggregation level used
+	uint32_t NCCE_index;//NCCE index used to send the DCI Value: 0 → 1
+  	uint32_t Aggregation_L;//The aggregation level used
   	uint8_t Start_symbol;//Start symbol for the transmisison of the NPDCCH containing the DCI N0.
   	rnti_t RNTI;//The RNTI used for identifying the UE when receiving the PDU Value: 1 → 65535.
 	uint32_t startTime;

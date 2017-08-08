@@ -19,16 +19,16 @@ typedef struct _UE_TEMPLATE_NB
   	uint8_t oldNDI;// not used for now.
   	// NDI from last UL scheduling
   	uint8_t oldNDI_UL;
-  	uint8_t CRC_indication;
+  	uint32_t CRC_indication;
 	// Flag to indicate UL has been scheduled at least once
- 	bool ul_active;
+ 	// bool ul_active;
 	// Flag to indicate UE has been configured (ACK from RRCConnectionSetup received)
 	bool configured;//After receive Msg3 in subframe n, recevice ACK for Msg4 in subframe n+pp
 	bool schedStatus;
-	bool schedMsg3;
+	// bool schedMsg3;
 	int PHR;	//BS know UE's Power budget.
 	//Msg3 content
-	uint8_t multi_tone;// 0: not support; 1:support
+	uint32_t multi_tone;// 0: not support; 1:support
 	int DV;//DV
 	int BSR;//shortBSR
 	//Scheduled Parameters
@@ -50,6 +50,7 @@ typedef struct _UE_TEMPLATE_NB
 	int sche_Msg5_Time;
 	uint32_t next_Arrival_Time;
 	int payloadSize;//Used for virtual UE
+	uint32_t I_payloadSize;
 }UE_TEMPLATE_NB;
 
 typedef struct _Pattern_base {
@@ -80,13 +81,13 @@ void NB_schedule_SI(frame_t,sub_frame_t,uint32_t,uint32_t *,MIB_NB *,SIB1_NB *,b
 
 void NB_schedule_RA(frame_t,sub_frame_t,uint32_t *,uint32_t **);
 // void NB_schedule_ulsch(frame_t,sub_frame_t,uint32_t,uint32_t *,uint32_t **,SIB2_NB *,UL_IND_t &);
-void NB_schedule_ulsch(uint32_t,frame_t,sub_frame_t,uint32_t,MIB_NB &,SIB1_NB &,SIB2_NB &,RRCCoonectionSetup_NB &,UL_IND_t &,uint8_t &);
+void NB_schedule_ulsch(uint32_t,frame_t,sub_frame_t,uint32_t,MIB_NB &,SIB1_NB &,SIB2_NB &,RRCCoonectionSetup_NB &,UL_IND_t &);
 void NB_schedule_dlsch(frame_t,sub_frame_t,uint32_t *);
 
 bool compareMyType5 (const HI_DCI0_request_t &, const HI_DCI0_request_t &);
 bool compareMyType4 (const HI_DCI0_request_t &, const HI_DCI0_request_t &);
-uint8_t get_aggregation(uint32_t,uint32_t,uint32_t);
-int get_nprah_resource(int,SIB2_NB &);
+uint32_t get_aggregation(uint32_t,uint32_t,uint32_t);
+uint32_t get_nprah_resource(int,SIB2_NB &);
 uint32_t get_DCI_Filed(const uint32_t,uint32_t);
 uint32_t num_ULslots(uint32_t);
 uint32_t get_I_RU(uint32_t);
